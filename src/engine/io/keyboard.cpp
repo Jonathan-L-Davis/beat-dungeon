@@ -34,7 +34,7 @@ key::key(){
     isKeyActive = false;
     flags = HOLD_ANY_KEY;
 
-    keyboard.registerKey(this);
+    keyboard.registerKey(this);// relies on undefined behavior. Might get away with it since it's in the same translation unit, but still bad practice.
 }
 
 key::key(std::vector<SDL_Keycode> Key_Addresses){
@@ -67,50 +67,35 @@ key::~key(){
 
 
 void key::pressKey(SDL_Keycode keyPressed){
-    switch(flags){
+    
+    for(unsigned int i = 0; i < key_addresses.size(); i++){
+        if(key_addresses[i] == keyPressed){
+            booleanKeyPresses[i] = true;
+        }
+    }
 
+    bool isAnyKeyPressed = false;
+    for(unsigned int i = 0; i < booleanKeyPresses.size(); i++){
+        isAnyKeyPressed |= booleanKeyPresses[i];
+    }
+    
+    pressedDown = isAnyKeyPressed;
+    
+    switch(flags){
+        default:
         case HOLD_ANY_KEY:
         {
-            for(unsigned int i = 0; i < key_addresses.size(); i++){
-                if(key_addresses[i] == keyPressed){
-                    booleanKeyPresses[i] = true;
-                }
-            }
-
-            bool isAnyKeyPressed = false;
-            for(unsigned int i = 0; i < booleanKeyPresses.size(); i++){
-                isAnyKeyPressed |= booleanKeyPresses[i];
-            }
             isKeyActive = isAnyKeyPressed;
         }
         break;
         case TOGGLE:
-        {
-            for(unsigned int i = 0; i < key_addresses.size(); i++){
-                if(key_addresses[i] == keyPressed){
-                    booleanKeyPresses[i] = true;
-                }
-            }
-
-            bool isAnyKeyPressed = false;
-            for(unsigned int i = 0; i < booleanKeyPresses.size(); i++){
-                isAnyKeyPressed |= booleanKeyPresses[i];
-            }
-            //pressedDown = isAnyKeyPressed;
-
-
-
+        {            
+            pressedDown = isAnyKeyPressed;
+            
             if(!pressedDown && isAnyKeyPressed)
-                isKeyActive = !isKeyActive,
-                pressedDown = true;
+                isKeyActive = !isKeyActive;
         }
         break;
-        default:
-            for(unsigned int i = 0; i < key_addresses.size(); i++){
-                if(key_addresses[i] == keyPressed){
-                    pressedDown = true;
-                }
-            }
     }
 }
 
@@ -165,10 +150,12 @@ bool key::isActive(){
 
 void key::setKeys(std::vector<SDL_Keycode> keys){
     key_addresses = keys;
+    booleanKeyPresses.resize(keys.size());
 }
 
 void key::eraseKeys(){
     key_addresses = {};
+    booleanKeyPresses = {};
 }
 
 void key::setFlags(uint64_t Flags){

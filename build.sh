@@ -3,7 +3,7 @@
 # If I ever need to make multiple exe's for a project, it should be easy enough to make this a function. Simply make arg1 the exe name, and arg2 the array name.
 # I'd probably need to add parameters for including and linking libraries though. Not a big deal, but a complication nonetheless.
 
-Executable="space-chess"
+Executable="beat-dungeon"
 Source_Files=(
     "main.cpp"
     
@@ -42,7 +42,8 @@ for object in "${Object_Files[@]}" ; do
     file_glob+=" $object"
 done
 
-zig c++ $file_glob -o "${Executable}" -L/usr/local/lib -lSDL3 -lvulkan
+mkdir -p rt
+zig c++ $file_glob -o "rt/${Executable}" -L/usr/local/lib -lSDL3 -lvulkan
 
 glslc src/shader/vertex/shader.vert -o vert.spv
 glslc src/shader/fragment/shader.frag -o frag.spv
