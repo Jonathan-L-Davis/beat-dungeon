@@ -10,6 +10,7 @@
 #include "graphics/imgui/imgui_impl_vulkan.h"
 
 #include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
 
 namespace graphics{
     namespace vulkan{
@@ -29,6 +30,12 @@ namespace graphics{
             glm::vec3 color;
         };
         
+        struct UniformBufferObject {
+            glm::mat4 model;
+            glm::mat4 view;
+            glm::mat4 proj;
+        };
+        
         VkVertexInputBindingDescription getBindingDescription();
         std::array<VkVertexInputAttributeDescription, 2> getAttributeDescriptions();
         
@@ -40,11 +47,15 @@ namespace graphics{
         bool create_swapchain();
         bool create_image_views();
         bool create_renderpass();
+        bool create_descriptor_set_layout();
         bool create_pipeline();
         bool create_framebuffers();
         bool create_command_pool();
         bool create_vertex_buffers();
         bool create_index_buffers();
+        bool create_uniform_buffers();
+        bool create_descriptor_pool();
+        bool create_descriptor_sets();
         bool create_command_buffers();
         bool create_sync_objects();
         
@@ -55,6 +66,8 @@ namespace graphics{
         
         void recreate_swapchain();
         void terminate_swapchain();
+        
+        void update_uniforms(uint32_t currentImage);
     }
 }
 

@@ -25,9 +25,6 @@ void update(double timeStep){
     
     if(duration>s){
         last_beat = now;
-        //std::cout << s << "\n";
-        std::cout << "THUMP\n";
-        if(up.isActive())std::cout << "Moving up.\n";
     }
     
     

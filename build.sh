@@ -45,6 +45,6 @@ done
 mkdir -p rt
 zig c++ $file_glob -o "rt/${Executable}" -L/usr/local/lib -lSDL3 -lvulkan
 
-glslc src/shader/vertex/shader.vert -o vert.spv
-glslc src/shader/fragment/shader.frag -o frag.spv
+glslc src/shader/vertex/shader.vert -o rt/vert.spv
+glslc src/shader/fragment/shader.frag -o rt/frag.spv
 
