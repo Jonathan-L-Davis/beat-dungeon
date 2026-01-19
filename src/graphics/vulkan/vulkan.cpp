@@ -42,7 +42,7 @@ void populateDebugMessengerCreateInfo(VkDebugUtilsMessengerCreateInfoEXT& create
     createInfo.pfnUserCallback = debugCallback;
 }
 
-constexpr bool enableValidationLayers = true;
+constexpr bool enableValidationLayers = false;
 
 // required extensions
 std::vector<const char*>        instance_extensions={
@@ -891,8 +891,8 @@ namespace graphics{
         }
         
         bool create_pipeline(){
-            auto vertShaderCode = load_file("vert.spv");
-            auto fragShaderCode = load_file("frag.spv");
+            auto vertShaderCode = load_file("res/shaders/vert.spv");
+            auto fragShaderCode = load_file("res/shaders/frag.spv");
 
             VkShaderModule vertShaderModule = createShaderModule(vertShaderCode);
             VkShaderModule fragShaderModule = createShaderModule(fragShaderCode);

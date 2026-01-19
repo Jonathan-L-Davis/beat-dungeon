@@ -170,26 +170,23 @@ void init(std::string title){
         std::cout << "Failed to complete initialization of graphics module.\n";
         std::exit(-1);
     }
-    /*
-    b.data.resize(7);
-    for(int i = 0; i < b.data.size(); i++)
-        b.data[i].resize(7);
     
-    for(int i = 0; i < b.data.size(); i++){
-        for(int j = 0; j < b.data[i].size(); j++){
-            
-            
-            b.data[i][j].type=floor_t::floor;
-            
-            if(i&1&&j&1)b.data[i][j].type=floor_t::wall;
-            
-            
-            
+    if(!b.load_level("levels/lvl1.lvl")){
+        b.data.resize(7);
+        for(int i = 0; i < b.data.size(); i++)
+            b.data[i].resize(7);
+        
+        for(int i = 0; i < b.data.size(); i++){
+            for(int j = 0; j < b.data[i].size(); j++){
+                
+                
+                b.data[i][j].type=floor_t::floor;
+                
+                if(i&1&&j&1)b.data[i][j].type=floor_t::wall;
+                
+            }
         }
     }
-    
-    b.save_level("lvl1.lvl");//*/std::cout << "loading the level now.\n";
-    b.load_level("lvl3.lvl");
 }
 
 void terminate(){

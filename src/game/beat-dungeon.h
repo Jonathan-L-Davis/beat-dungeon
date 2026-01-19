@@ -13,6 +13,8 @@ enum struct floor_t: uint8_t {
     exit = 8,
 };
 
+std::string to_str(floor_t strMe);
+
 struct plate_t{
     uint8_t x,y;// points to door on map.
     uint8_t ticks_alive;
@@ -68,7 +70,7 @@ struct board{
     void resize(int x, int y);
     
     void step_player(uint8_t movement);
-    void step_plates();
+    void step_plates(int beat);
     void step(int beat,uint8_t movement);
     
     

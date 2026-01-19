@@ -8,9 +8,27 @@
 
 constexpr uint32_t version = 0;
 
+
+
+std::string to_str(floor_t strMe){
+    switch(strMe){
+        case floor_t::pit         : return "pit";
+        case floor_t::floor       : return "floor";
+        case floor_t::wall        : return "wall";
+        case floor_t::plate       : return "plate";
+        case floor_t::door_open   : return "door_open";
+        case floor_t::door_closed : return "door_closed";
+        case floor_t::firepit_on  : return "firepit_on";
+        case floor_t::firepit_off : return "firepit_off";
+        case floor_t::exit        : return "exit";
+    }
+}
+
 bool board::load_level(std::string file_name){
     
     std::vector<uint8_t> file = load_file(file_name);
+    
+    if(file.size()==0) return false;
     
     uint32_t x,y;
     read_from_buffer(file,4,x);
@@ -38,7 +56,10 @@ bool board::load_level(std::string file_name){
         }
     }
     
-    return false;
+    read_from_buffer(file, idx, player.x);idx+=4;
+    read_from_buffer(file, idx, player.y);idx+=4;
+    
+    return true;
 }
 
 bool board::save_level(std::string file_name){
@@ -77,9 +98,10 @@ bool board::save_level(std::string file_name){
         }
     }
     
-    save_file(file_name,file);
+    append_to_buffer(file,player.x);
+    append_to_buffer(file,player.y);
     
-    return false;
+    return save_file(file_name,file);
 }
 
 void board::resize(int x, int y){
@@ -140,10 +162,10 @@ bool board::is_walkable(uint32_t x,uint32_t y){
 
 void board::step(int beat, uint8_t movement){
     step_player(movement);
-    if(beat%4==0) step_plates();
+    step_plates(beat);
 }
 
-void board::step_plates(){
+void board::step_plates(int beat){
     for( int i = 0; i < data.size(); i++ ){
         for( int j = 0; j < data[i].size(); j++ ){
             cell_t& cell = data[i][j];
@@ -151,13 +173,27 @@ void board::step_plates(){
                 plate_t& plate = *(plate_t*)(cell.cell_data);
                 // if plate is stepped on, make it alive.
                 if(player.x==i&&player.y==j){// will need to loop through all entities later to do this as well.
-                    if(plate.ticks_alive==0){
+                    if(plate.ticks_alive==0){// hopefully prevents double triggering
                         if( data[plate.x][plate.y].type==floor_t::door_open )
                             data[plate.x][plate.y].type = floor_t::door_closed;
+                        else
                         if( data[plate.x][plate.y].type==floor_t::door_closed )
                             data[plate.x][plate.y].type = floor_t::door_open;
                     }
                     plate.ticks_alive = plate.max_ticks;
+                }
+                if(beat%4) continue;
+                if(plate.ticks_alive>0){
+                    plate.ticks_alive--;
+                    // put back to original state.
+                    if(plate.ticks_alive==0){
+                        
+                        if( data[plate.x][plate.y].type==floor_t::door_open )
+                            data[plate.x][plate.y].type = floor_t::door_closed;
+                        else
+                        if( data[plate.x][plate.y].type==floor_t::door_closed )
+                            data[plate.x][plate.y].type = floor_t::door_open;
+                    }
                 }
             }
         }

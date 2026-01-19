@@ -44,12 +44,14 @@ for object in "${Object_Files[@]}" ; do
     file_glob+=" $object"
 done
 
-mkdir -p rt
-zig c++ $file_glob -o "rt/${Executable}" -L/usr/local/lib -lSDL3 -lvulkan -fsanitize=address
+mkdir -p gen
+zig c++ $file_glob -o "gen/${Executable}" -Wl,-rpath="\$ORIGIN" -L/usr/local/lib -lSDL3 -lX11 -lvulkan -fsanitize=address
 
-glslc src/shader/vertex/shader.vert -o rt/vert.spv
-glslc src/shader/fragment/shader.frag -o rt/frag.spv
+mkdir -p res/shaders
+glslc src/shader/vertex/shader.vert -o res/shaders/vert.spv
+glslc src/shader/fragment/shader.frag -o res/shaders/frag.spv
 
-cp -r res rt
-cp config.xml rt
+cp -r res gen
+cp config.xml gen
 
+cp -r levels gen/

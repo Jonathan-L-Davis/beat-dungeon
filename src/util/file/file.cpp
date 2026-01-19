@@ -5,12 +5,12 @@
 
 std::vector<uint8_t> load_file(std::string file_path){
     std::vector<uint8_t> retMe;
-    
+    if( !std::filesystem::exists(file_path)||!std::filesystem::is_regular_file(file_path) ) return {};
     int64_t file_size = std::filesystem::file_size(file_path);
     
     // using the C api because windows likes to insert carriage returns, even in binary mode.
     FILE* file = fopen(file_path.c_str(),"rb");
-    
+    if(file==NULL) return {};
     retMe.resize(file_size);
     
     for( int64_t bytes_read = 0; bytes_read < file_size && !std::feof(file); bytes_read += std::fread((char*)retMe.data()+bytes_read,1,file_size,file) );
@@ -26,6 +26,8 @@ std::vector<uint8_t> load_file(std::string file_path){
 
 bool save_file(std::string file_path, const std::vector<uint8_t>& data){
         FILE* file = fopen(file_path.c_str(),"wb");
+        
+        if(file==NULL) return false;
         
         std::size_t d = fwrite((char*)data.data(),1,data.size(),file);
         

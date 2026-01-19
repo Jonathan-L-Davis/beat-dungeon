@@ -10,15 +10,20 @@
 
 #include "game/beat-dungeon.h"
 
+#include <filesystem>
 #include <algorithm>
 #include <vector>
 #include <cmath>
+#include <set>
 
 extern board b;
 struct SDL_Window;
 extern SDL_Window* window;
 extern graphics::vulkan::UniformBufferObject ubo;
 extern mouse_t mouse;
+extern bool pause_request;
+extern bool unpause_request;
+extern bool paused;
 
 float FOV = 45;
 
@@ -39,6 +44,30 @@ std::vector<uint16_t> index_quads(std::vector<graphics::vulkan::Vertex> tris){
     return retMe;
 }
 
+std::string level_selector(){
+    std::string retMe;
+    ImGui::Begin("Level Selector");
+    
+    std::size_t max_length = 0;
+    for ( const auto& entry : std::filesystem::directory_iterator("levels") ) {
+        max_length = std::max(entry.path().filename().string().size(),max_length);
+    }
+    
+    float length = 10*max_length+20;
+    
+    std::set<std::string> files;
+    for ( const auto& entry : std::filesystem::directory_iterator("levels") ) {
+        files.insert(entry.path().filename().string());
+    }
+    
+    for ( const auto& str : files ) {
+        if(ImGui::Button(str.c_str(),{length,20})) retMe = "levels/"+str;
+    }
+    
+    ImGui::End();
+    return retMe;
+}
+
 void level_editor(){
     
     
@@ -55,7 +84,18 @@ void level_editor(){
     float y1 = b.data[0].size()/2.f;
     glm::vec4 max_p = ubo.proj*ubo.view*ubo.model*glm::vec4(x1-.5f,y1-.5f,20,1);
     
+    // should probably be deferred to the update function again, but ehh. Not necessary now. May be fine like this forever.
+    if(std::string new_level = level_selector();new_level!=""){
+        b.load_level(new_level);
+    }
+    
     ImGui::Begin("Level Editor");
+        
+        if(!paused&&ImGui::Button("Pause",{200,50}))
+            pause_request = true;
+        else if(paused&&ImGui::Button("Resume",{200,50}))
+            unpause_request = true;
+        else if(pause_request||unpause_request) ImGui::Button("##Dummy pause",{200,50});
         
         static int selected_x = 0;
         static int selected_y = 0;
@@ -64,6 +104,7 @@ void level_editor(){
             ImGui::Text("board is %zu by %zu tiles.",b.data.size(),b.data[0].size());
         }
         
+        {
         bool do_resize = ImGui::Button("Resize board");
         
         static int B_size[2] = {0,0};
@@ -73,6 +114,21 @@ void level_editor(){
             if(B_size[i]<1) B_size[i] = 1;
         
         if(do_resize) b.resize(B_size[0],B_size[1]);
+        }
+        
+        {
+        bool do_move = ImGui::Button("Move Player");
+        
+        static int B_size[2] = {0,0};
+        ImGui::InputInt2("##B_size2",B_size);
+        
+        for(int i = 0; i < 2; i++)
+            if(B_size[i]<0) B_size[i] = 0;
+        if(B_size[0]>=b.data.size()) B_size[0] = 0;
+        if(B_size[1]>=b.data[0].size()) B_size[1] = 0;
+        
+        if(do_move){b.player.x = B_size[0];b.player.y = B_size[1];}
+        }
         
         float m_x = 2*(mouse.mouseX/width-.5f);
         float m_y = 2*(mouse.mouseY/height-.5f);
@@ -87,31 +143,61 @@ void level_editor(){
         int Y_block = (int)std::floor(b.data[0].size()*(m_y-o_y)/(M_y-o_y));
         
         static char filename_buf[32];
-        ImGui::InputText("level name.",filename_buf,32);
-        if(ImGui::Button("Save level")) b.save_level(filename_buf);
+        ImGui::Text("Level Name:");
+        ImGui::InputText("##level-name",filename_buf,32);
+        static bool save_failed = false;
+        if(ImGui::Button("Save level")) save_failed = !b.save_level("levels/"+std::string(filename_buf));
         
-        static floor_t new_type;
+        if(save_failed) ImGui::Text("Failed to save level.");
         
+        if(X_block>=0&&X_block<b.data.size()&&Y_block>=0&&Y_block<b.data[0].size()){
+            ImGui::Text("<%d,%d>",X_block,Y_block);
+            
+            switch(b.data[X_block][Y_block].type){
+                case floor_t::pit         : ImGui::Text("type: pit");         break;
+                case floor_t::floor       : ImGui::Text("type: floor");       break;
+                case floor_t::wall        : ImGui::Text("type: wall");        break;
+                case floor_t::plate       : ImGui::Text("type: plate");       break;
+                case floor_t::door_open   : ImGui::Text("type: door_open");   break;
+                case floor_t::door_closed : ImGui::Text("type: door_closed"); break;
+                case floor_t::firepit_on  : ImGui::Text("type: firepit_on");  break;
+                case floor_t::firepit_off : ImGui::Text("type: firepit_off"); break;
+                case floor_t::exit        : ImGui::Text("type: exit");        break;
+            }
+        }else{
+            ImGui::Text("<,>");
+            ImGui::Text("This area is non-editable.");
+        }
+        
+        
+        static bool draw = false;
+        
+        if(!draw&&ImGui::Button("Draw",{200,50}))    draw = true;
+        else// the else prevents them both appearing on the frame of transition.
+        if( draw&&ImGui::Button("No Draw",{200,50})) draw = false;
+        
+        static floor_t new_type = floor_t::pit;
+        std::string selected_type = to_str(new_type);
+        
+        ImGui::Text("Selected tile type: %s", selected_type.c_str());
         if(ImGui::Button("pit")) new_type = floor_t::pit;
         if(ImGui::Button("floor")) new_type = floor_t::floor;
         if(ImGui::Button("wall")) new_type = floor_t::wall;
         if(ImGui::Button("plate")) new_type = floor_t::plate;
         if(ImGui::Button("door_open")) new_type = floor_t::door_open;
         if(ImGui::Button("door_closed")) new_type = floor_t::door_closed;
-        if(ImGui::Button("fire")) new_type = floor_t::firepit_on;
-        if(ImGui::Button("fire_pit")) new_type = floor_t::firepit_off;
+        if(ImGui::Button("firepit_on")) new_type = floor_t::firepit_on;
+        if(ImGui::Button("firepit_off")) new_type = floor_t::firepit_off;
         if(ImGui::Button("exit")) new_type = floor_t::exit;
         
         static bool edit_plate = false;
         static int plate_x;
         static int plate_y;
         
-        if(X_block>=0&&X_block<b.data.size()&&Y_block>=0&&Y_block<b.data[0].size()){
-            ImGui::Text("<%d,%d>",X_block,Y_block);
-            if(b.data[X_block][Y_block].type == floor_t::floor)
-                ImGui::Text("tile type is floor!");
-            if(b.data[X_block][Y_block].type == floor_t::wall)
-                ImGui::Text("tile type is wall!");
+        if(draw&&X_block>=0&&X_block<b.data.size()&&Y_block>=0&&Y_block<b.data[0].size()){
+            
+            
+            
             
             if(mouse.leftDown){
                 
@@ -144,7 +230,7 @@ void level_editor(){
         
     ImGui::End();
     
-    if(edit_plate){
+    if(edit_plate&&draw){
     ImGui::Begin("Plate editor");
         
         plate_t& P = *(plate_t*)b.data[plate_x][plate_y].cell_data;
