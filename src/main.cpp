@@ -8,25 +8,25 @@ app_timer app_clock;
 
 int main(int argc,char** argv){
     
-    init("gui_base");
-
+    init("beat-dungeon");
+    
     app_clock.start();
     while( !quit ){
-
+        
         app_clock.accumulate();
-
+        
         while( app_clock.need_update() ){
             input();
             update( app_clock.time_step() );
         }
-
+        
         app_clock.sleep();
-
+        
         if( app_clock.need_frame() ){
             draw();
         }
-
+        
     }
-
+    
     terminate();
 }

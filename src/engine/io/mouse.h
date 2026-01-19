@@ -5,19 +5,18 @@
 #include <SDL3/SDL_mouse.h>
 #include <SDL3/SDL_events.h>
 
-struct mouse{
+struct mouse_t{
 public:
     bool leftDown;
     bool middleDown;
     bool rightDown;
 
-    int mouseX, mouseY;
-    float mouseSensitivity = 0.5f;
+    float mouseX, mouseY;
 
-    bool isMotionRelative;
+    bool isMotionRelative = false;
 
-    mouse();
-    ~mouse();
+    mouse_t();
+    ~mouse_t();
 
     void pressButton( decltype(SDL_BUTTON_LEFT) );
     void unpressButton( decltype(SDL_BUTTON_LEFT) );
@@ -29,10 +28,10 @@ public:
 #ifdef mouseRegistrarDetails
 class mouseRegistrar{
 private:
-    std::vector<mouse*> mice;
+    std::vector<mouse_t*> mice;
 public:
-    void registerMouse(mouse*);
-    void unregisterMouse(mouse*);
+    void registerMouse(mouse_t*);
+    void unregisterMouse(mouse_t*);
 
     void pressButton( decltype(SDL_BUTTON_LEFT) );
     void unpressButton( decltype(SDL_BUTTON_LEFT) );

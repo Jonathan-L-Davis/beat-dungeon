@@ -6,14 +6,10 @@
 #include "geometry/tri.h"
 #include "geometry/line.h"
 #include "geometry/point.h"
-#include "vulkan/shader.h"
+#include "vulkan/vulkan.h"
 
 namespace graphics{
     bool initialize();
-    
-    bool submit_tris(std::vector<tri>&,shaderID);
-    bool submit_lines(std::vector<line>&,shaderID);
-    bool submit_points(std::vector<point>&,shaderID);
     
     void start_frame();
     void end_frame();

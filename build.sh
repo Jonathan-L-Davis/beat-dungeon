@@ -16,7 +16,9 @@ Source_Files=(
     "graphics/imgui/imgui_impl_sdl3.cpp" "graphics/imgui/imgui_impl_vulkan.cpp"
     "graphics/vulkan/shader.cpp" "graphics/vulkan/vulkan.cpp"
     
-    "util/xml/Markup.cpp" "util/file/file.cpp"
+    "util/xml/Markup.cpp" "util/file/file.cpp" "util/stb/stb_image.cpp"
+    
+    "game/beat-dungeon.cpp"
 )
 
 Object_Files=()
@@ -43,8 +45,11 @@ for object in "${Object_Files[@]}" ; do
 done
 
 mkdir -p rt
-zig c++ $file_glob -o "rt/${Executable}" -L/usr/local/lib -lSDL3 -lvulkan
+zig c++ $file_glob -o "rt/${Executable}" -L/usr/local/lib -lSDL3 -lvulkan -fsanitize=address
 
 glslc src/shader/vertex/shader.vert -o rt/vert.spv
 glslc src/shader/fragment/shader.frag -o rt/frag.spv
+
+cp -r res rt
+cp config.xml rt
 

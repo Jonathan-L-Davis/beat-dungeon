@@ -13,6 +13,7 @@
 #include <SDL3/SDL.h>
 
 extern keyRegistrar keyboard;
+extern mouseRegistrar allMice;
 extern SDL_Window* window;
 
 void input(){
@@ -49,16 +50,16 @@ void input(){
         }
         if( event.type == SDL_EVENT_MOUSE_BUTTON_DOWN )
         {
-            //allMice.pressButton(event.button.button);
+            allMice.pressButton(event.button.button);
         }
         else if( event.type == SDL_EVENT_MOUSE_BUTTON_UP )
         {
-            //allMice.unpressButton(event.button.button);
+            allMice.unpressButton(event.button.button);
         }
         
         if(event.type == SDL_EVENT_MOUSE_MOTION)
         {
-            //allMice.moveMouse(event.motion);
+            allMice.moveMouse(event.motion);
         }
     }//*/
     

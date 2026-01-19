@@ -1,21 +1,189 @@
 #include "main.h"
+#include "io/keyboard.h"
+#include "io/mouse.h"
 
 #include "graphics/graphics.h"
 #include "graphics/imgui/imgui.h"
 #include "graphics/imgui/imgui_impl_sdl3.h"
 
+#include "graphics/vulkan/vulkan.h"
+
+#include "game/beat-dungeon.h"
+
 #include <algorithm>
 #include <vector>
 #include <cmath>
 
-bool show_demo_window = true;
-bool show_another_window = false;
-ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
+extern board b;
+struct SDL_Window;
+extern SDL_Window* window;
+extern graphics::vulkan::UniformBufferObject ubo;
+extern mouse_t mouse;
+
+float FOV = 45;
+
+std::vector<uint16_t> index_quads(std::vector<graphics::vulkan::Vertex> tris){
+    std::vector<uint16_t> retMe;
+    
+    assert( (tris.size()%4)==0 );
+    
+    for( int i = 0; i < tris.size()/4; i++ ){
+        retMe.push_back(i*4+0);
+        retMe.push_back(i*4+1);
+        retMe.push_back(i*4+2);
+        retMe.push_back(i*4+2);
+        retMe.push_back(i*4+3);
+        retMe.push_back(i*4+0);
+    }
+    
+    return retMe;
+}
+
+void level_editor(){
+    
+    
+    
+    int width, height;
+    SDL_GetWindowSize(window, &width, &height);
+    float aspect_ratio = height/(float)width;
+    
+    float x0 = b.data.size()/-2.f;
+    float y0 = b.data[0].size()/-2.f;
+    glm::vec4 origin = ubo.proj*ubo.view*ubo.model*glm::vec4(x0-.5f,y0-.5f,20,1);
+    
+    float x1 = b.data.size()/2.f;
+    float y1 = b.data[0].size()/2.f;
+    glm::vec4 max_p = ubo.proj*ubo.view*ubo.model*glm::vec4(x1-.5f,y1-.5f,20,1);
+    
+    ImGui::Begin("Level Editor");
+        
+        static int selected_x = 0;
+        static int selected_y = 0;
+        
+        if(b.data.size()>0){
+            ImGui::Text("board is %zu by %zu tiles.",b.data.size(),b.data[0].size());
+        }
+        
+        bool do_resize = ImGui::Button("Resize board");
+        
+        static int B_size[2] = {0,0};
+        ImGui::InputInt2("##B_size",B_size);
+        
+        for(int i = 0; i < 2; i++)
+            if(B_size[i]<1) B_size[i] = 1;
+        
+        if(do_resize) b.resize(B_size[0],B_size[1]);
+        
+        float m_x = 2*(mouse.mouseX/width-.5f);
+        float m_y = 2*(mouse.mouseY/height-.5f);
+        
+        float o_x = origin.x/origin.w;
+        float o_y = origin.y/origin.w;
+        
+        float M_x = max_p.x/max_p.w;
+        float M_y = max_p.y/max_p.w;
+        
+        int X_block = (int)std::floor(b.data   .size()*(m_x-o_x)/(M_x-o_x));
+        int Y_block = (int)std::floor(b.data[0].size()*(m_y-o_y)/(M_y-o_y));
+        
+        static char filename_buf[32];
+        ImGui::InputText("level name.",filename_buf,32);
+        if(ImGui::Button("Save level")) b.save_level(filename_buf);
+        
+        static floor_t new_type;
+        
+        if(ImGui::Button("pit")) new_type = floor_t::pit;
+        if(ImGui::Button("floor")) new_type = floor_t::floor;
+        if(ImGui::Button("wall")) new_type = floor_t::wall;
+        if(ImGui::Button("plate")) new_type = floor_t::plate;
+        if(ImGui::Button("door_open")) new_type = floor_t::door_open;
+        if(ImGui::Button("door_closed")) new_type = floor_t::door_closed;
+        if(ImGui::Button("fire")) new_type = floor_t::firepit_on;
+        if(ImGui::Button("fire_pit")) new_type = floor_t::firepit_off;
+        if(ImGui::Button("exit")) new_type = floor_t::exit;
+        
+        static bool edit_plate = false;
+        static int plate_x;
+        static int plate_y;
+        
+        if(X_block>=0&&X_block<b.data.size()&&Y_block>=0&&Y_block<b.data[0].size()){
+            ImGui::Text("<%d,%d>",X_block,Y_block);
+            if(b.data[X_block][Y_block].type == floor_t::floor)
+                ImGui::Text("tile type is floor!");
+            if(b.data[X_block][Y_block].type == floor_t::wall)
+                ImGui::Text("tile type is wall!");
+            
+            if(mouse.leftDown){
+                
+                if(b.data[X_block][Y_block].type!=new_type){
+                    
+                    if(b.data[X_block][Y_block].type==floor_t::plate) delete (plate_t*)b.data[X_block][Y_block].cell_data;
+                    
+                    b.data[X_block][Y_block].type = new_type;
+                    
+                    if(b.data[X_block][Y_block].type==floor_t::plate){
+                        b.data[X_block][Y_block].cell_data = new plate_t{};
+                    }
+                }
+                
+            }
+            
+            if(mouse.rightDown){
+                
+                edit_plate = b.data[X_block][Y_block].type==floor_t::plate;
+                
+                if(edit_plate){
+                    plate_x = X_block;
+                    plate_y = Y_block;
+                }
+                
+            }
+            
+        }
+        
+        
+    ImGui::End();
+    
+    if(edit_plate){
+    ImGui::Begin("Plate editor");
+        
+        plate_t& P = *(plate_t*)b.data[plate_x][plate_y].cell_data;
+        
+        int target_x = P.x;
+        int target_y = P.y;
+        ImGui::InputInt("target x",&target_x,1,5);
+        ImGui::InputInt("target y",&target_y,1,5);
+        P.x = target_x;
+        P.y = target_y;
+        
+        int ticks = P.ticks_alive;
+        ImGui::InputInt("ticks to live",&ticks,1,5);
+        P.ticks_alive = ticks;
+        
+        int max_ticks = P.max_ticks;
+        ImGui::InputInt("max ticks",&max_ticks,1,5);
+        P.max_ticks = max_ticks;
+        
+    ImGui::End();
+    }
+}
 
 void draw(){
     graphics::start_frame();
     
-    ;
+    int width, height;
+    SDL_GetWindowSize(window, &width, &height);
+    float aspect_ratio = height/(float)width;
+    ubo.model = glm::rotate(glm::mat4(1.0f), 0 * glm::radians(90.0f), glm::vec3(0.0f, 0.0f, 1.0f));
+    ubo.view = glm::lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f), glm::vec3(0.0f, -1.0f, 0.0f));
+    ubo.proj = glm::perspective(glm::radians(FOV), width / (float) height, 0.1f, 100.0f);
+    ubo.proj[1][1] *= -1;
+    
+    std::vector<graphics::vulkan::Vertex> tris = draw_board(b,aspect_ratio);
+    
+    graphics::vulkan::upload_tris(tris,index_quads(tris));
+    
+    level_editor();
     
     graphics::end_frame();
 }
