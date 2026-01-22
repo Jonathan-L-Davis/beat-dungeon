@@ -10,6 +10,8 @@ Source_Files=(
     "engine/draw.cpp" "engine/init.cpp" "engine/input.cpp" "engine/update.cpp"
     "engine/io/keyboard.cpp" "engine/io/mouse.cpp"
     
+    "audio/audio.cpp"
+    
     "graphics/graphics.cpp"
     "graphics/STL/STL.cpp"
     "graphics/imgui/imgui.cpp" "graphics/imgui/imgui_demo.cpp" "graphics/imgui/imgui_draw.cpp" "graphics/imgui/imgui_tables.cpp" "graphics/imgui/imgui_widgets.cpp"

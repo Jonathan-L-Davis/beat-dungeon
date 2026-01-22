@@ -20,7 +20,12 @@ struct init_data_t{
     
     struct atlas_t{
         uint32_t h,w;
-        rect player,wall,drummer,sax,fire,fire_out,floor,plate,door_open,door_closed,exit;
+        rect player,drummer,sax,fire,fire_out,floor,plate,door_open,door_closed,exit,notes;
+        
+        rect wall_1_tl_000,wall_1_tl_001,wall_1_tl_010,wall_1_tl_011,wall_1_tl_100,wall_1_tl_101,wall_1_tl_110,wall_1_tl_111;
+        rect wall_1_tr_000,wall_1_tr_001,wall_1_tr_010,wall_1_tr_011,wall_1_tr_100,wall_1_tr_101,wall_1_tr_110,wall_1_tr_111;
+        rect wall_1_br_000,wall_1_br_001,wall_1_br_010,wall_1_br_011,wall_1_br_100,wall_1_br_101,wall_1_br_110,wall_1_br_111;
+        rect wall_1_bl_000,wall_1_bl_001,wall_1_bl_010,wall_1_bl_011,wall_1_bl_100,wall_1_bl_101,wall_1_bl_110,wall_1_bl_111;
     };
     
     atlas_t atlas;

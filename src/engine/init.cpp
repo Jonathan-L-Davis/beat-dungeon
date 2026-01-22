@@ -8,6 +8,8 @@ extern keyRegistrar keyboard;
 
 #include "game/beat-dungeon.h"
 
+#include "audio/audio.h"
+
 extern key up,down,left,right;
 init_data_t init_data;
 extern board b;
@@ -27,13 +29,6 @@ bool load_atlas(std::string path){
         init_data.atlas.player.y = std::stoi(atlas.GetChildAttrib("y"));
         init_data.atlas.player.h = std::stoi(atlas.GetChildAttrib("h"));
         init_data.atlas.player.w = std::stoi(atlas.GetChildAttrib("w"));
-    }else return false;
-    
-    if(atlas.FindChildElem("wall")){
-        init_data.atlas.wall.x = std::stoi(atlas.GetChildAttrib("x"));
-        init_data.atlas.wall.y = std::stoi(atlas.GetChildAttrib("y"));
-        init_data.atlas.wall.h = std::stoi(atlas.GetChildAttrib("h"));
-        init_data.atlas.wall.w = std::stoi(atlas.GetChildAttrib("w"));
     }else return false;
     
     if(atlas.FindChildElem("drummer")){
@@ -99,6 +94,230 @@ bool load_atlas(std::string path){
         init_data.atlas.exit.w = std::stoi(atlas.GetChildAttrib("w"));
     }else return false;
     
+    if(atlas.FindChildElem("wall_1_tl_000")){
+        init_data.atlas.wall_1_tl_000.x = std::stoi(atlas.GetChildAttrib("x"));
+        init_data.atlas.wall_1_tl_000.y = std::stoi(atlas.GetChildAttrib("y"));
+        init_data.atlas.wall_1_tl_000.h = std::stoi(atlas.GetChildAttrib("h"));
+        init_data.atlas.wall_1_tl_000.w = std::stoi(atlas.GetChildAttrib("w"));
+    }else return false;
+    
+    if(atlas.FindChildElem("wall_1_tl_001")){
+        init_data.atlas.wall_1_tl_001.x = std::stoi(atlas.GetChildAttrib("x"));
+        init_data.atlas.wall_1_tl_001.y = std::stoi(atlas.GetChildAttrib("y"));
+        init_data.atlas.wall_1_tl_001.h = std::stoi(atlas.GetChildAttrib("h"));
+        init_data.atlas.wall_1_tl_001.w = std::stoi(atlas.GetChildAttrib("w"));
+    }else return false;
+    
+    if(atlas.FindChildElem("wall_1_tl_010")){
+        init_data.atlas.wall_1_tl_010.x = std::stoi(atlas.GetChildAttrib("x"));
+        init_data.atlas.wall_1_tl_010.y = std::stoi(atlas.GetChildAttrib("y"));
+        init_data.atlas.wall_1_tl_010.h = std::stoi(atlas.GetChildAttrib("h"));
+        init_data.atlas.wall_1_tl_010.w = std::stoi(atlas.GetChildAttrib("w"));
+    }else return false;
+    
+    if(atlas.FindChildElem("wall_1_tl_011")){
+        init_data.atlas.wall_1_tl_011.x = std::stoi(atlas.GetChildAttrib("x"));
+        init_data.atlas.wall_1_tl_011.y = std::stoi(atlas.GetChildAttrib("y"));
+        init_data.atlas.wall_1_tl_011.h = std::stoi(atlas.GetChildAttrib("h"));
+        init_data.atlas.wall_1_tl_011.w = std::stoi(atlas.GetChildAttrib("w"));
+    }else return false;
+    
+    if(atlas.FindChildElem("wall_1_tl_100")){
+        init_data.atlas.wall_1_tl_100.x = std::stoi(atlas.GetChildAttrib("x"));
+        init_data.atlas.wall_1_tl_100.y = std::stoi(atlas.GetChildAttrib("y"));
+        init_data.atlas.wall_1_tl_100.h = std::stoi(atlas.GetChildAttrib("h"));
+        init_data.atlas.wall_1_tl_100.w = std::stoi(atlas.GetChildAttrib("w"));
+    }else return false;
+    
+    if(atlas.FindChildElem("wall_1_tl_101")){
+        init_data.atlas.wall_1_tl_101.x = std::stoi(atlas.GetChildAttrib("x"));
+        init_data.atlas.wall_1_tl_101.y = std::stoi(atlas.GetChildAttrib("y"));
+        init_data.atlas.wall_1_tl_101.h = std::stoi(atlas.GetChildAttrib("h"));
+        init_data.atlas.wall_1_tl_101.w = std::stoi(atlas.GetChildAttrib("w"));
+    }else return false;
+    
+    if(atlas.FindChildElem("wall_1_tl_110")){
+        init_data.atlas.wall_1_tl_110.x = std::stoi(atlas.GetChildAttrib("x"));
+        init_data.atlas.wall_1_tl_110.y = std::stoi(atlas.GetChildAttrib("y"));
+        init_data.atlas.wall_1_tl_110.h = std::stoi(atlas.GetChildAttrib("h"));
+        init_data.atlas.wall_1_tl_110.w = std::stoi(atlas.GetChildAttrib("w"));
+    }else return false;
+    
+    if(atlas.FindChildElem("wall_1_tl_111")){
+        init_data.atlas.wall_1_tl_111.x = std::stoi(atlas.GetChildAttrib("x"));
+        init_data.atlas.wall_1_tl_111.y = std::stoi(atlas.GetChildAttrib("y"));
+        init_data.atlas.wall_1_tl_111.h = std::stoi(atlas.GetChildAttrib("h"));
+        init_data.atlas.wall_1_tl_111.w = std::stoi(atlas.GetChildAttrib("w"));
+    }else return false;
+    
+    if(atlas.FindChildElem("wall_1_tr_000")){
+        init_data.atlas.wall_1_tr_000.x = std::stoi(atlas.GetChildAttrib("x"));
+        init_data.atlas.wall_1_tr_000.y = std::stoi(atlas.GetChildAttrib("y"));
+        init_data.atlas.wall_1_tr_000.h = std::stoi(atlas.GetChildAttrib("h"));
+        init_data.atlas.wall_1_tr_000.w = std::stoi(atlas.GetChildAttrib("w"));
+    }else return false;
+    
+    if(atlas.FindChildElem("wall_1_tr_001")){
+        init_data.atlas.wall_1_tr_001.x = std::stoi(atlas.GetChildAttrib("x"));
+        init_data.atlas.wall_1_tr_001.y = std::stoi(atlas.GetChildAttrib("y"));
+        init_data.atlas.wall_1_tr_001.h = std::stoi(atlas.GetChildAttrib("h"));
+        init_data.atlas.wall_1_tr_001.w = std::stoi(atlas.GetChildAttrib("w"));
+    }else return false;
+    
+    if(atlas.FindChildElem("wall_1_tr_010")){
+        init_data.atlas.wall_1_tr_010.x = std::stoi(atlas.GetChildAttrib("x"));
+        init_data.atlas.wall_1_tr_010.y = std::stoi(atlas.GetChildAttrib("y"));
+        init_data.atlas.wall_1_tr_010.h = std::stoi(atlas.GetChildAttrib("h"));
+        init_data.atlas.wall_1_tr_010.w = std::stoi(atlas.GetChildAttrib("w"));
+    }else return false;
+    
+    if(atlas.FindChildElem("wall_1_tr_011")){
+        init_data.atlas.wall_1_tr_011.x = std::stoi(atlas.GetChildAttrib("x"));
+        init_data.atlas.wall_1_tr_011.y = std::stoi(atlas.GetChildAttrib("y"));
+        init_data.atlas.wall_1_tr_011.h = std::stoi(atlas.GetChildAttrib("h"));
+        init_data.atlas.wall_1_tr_011.w = std::stoi(atlas.GetChildAttrib("w"));
+    }else return false;
+    
+    if(atlas.FindChildElem("wall_1_tr_100")){
+        init_data.atlas.wall_1_tr_100.x = std::stoi(atlas.GetChildAttrib("x"));
+        init_data.atlas.wall_1_tr_100.y = std::stoi(atlas.GetChildAttrib("y"));
+        init_data.atlas.wall_1_tr_100.h = std::stoi(atlas.GetChildAttrib("h"));
+        init_data.atlas.wall_1_tr_100.w = std::stoi(atlas.GetChildAttrib("w"));
+    }else return false;
+    
+    if(atlas.FindChildElem("wall_1_tr_101")){
+        init_data.atlas.wall_1_tr_101.x = std::stoi(atlas.GetChildAttrib("x"));
+        init_data.atlas.wall_1_tr_101.y = std::stoi(atlas.GetChildAttrib("y"));
+        init_data.atlas.wall_1_tr_101.h = std::stoi(atlas.GetChildAttrib("h"));
+        init_data.atlas.wall_1_tr_101.w = std::stoi(atlas.GetChildAttrib("w"));
+    }else return false;
+    
+    if(atlas.FindChildElem("wall_1_tr_110")){
+        init_data.atlas.wall_1_tr_110.x = std::stoi(atlas.GetChildAttrib("x"));
+        init_data.atlas.wall_1_tr_110.y = std::stoi(atlas.GetChildAttrib("y"));
+        init_data.atlas.wall_1_tr_110.h = std::stoi(atlas.GetChildAttrib("h"));
+        init_data.atlas.wall_1_tr_110.w = std::stoi(atlas.GetChildAttrib("w"));
+    }else return false;
+    
+    if(atlas.FindChildElem("wall_1_tr_111")){
+        init_data.atlas.wall_1_tr_111.x = std::stoi(atlas.GetChildAttrib("x"));
+        init_data.atlas.wall_1_tr_111.y = std::stoi(atlas.GetChildAttrib("y"));
+        init_data.atlas.wall_1_tr_111.h = std::stoi(atlas.GetChildAttrib("h"));
+        init_data.atlas.wall_1_tr_111.w = std::stoi(atlas.GetChildAttrib("w"));
+    }else return false;
+    
+    if(atlas.FindChildElem("wall_1_br_000")){
+        init_data.atlas.wall_1_br_000.x = std::stoi(atlas.GetChildAttrib("x"));
+        init_data.atlas.wall_1_br_000.y = std::stoi(atlas.GetChildAttrib("y"));
+        init_data.atlas.wall_1_br_000.h = std::stoi(atlas.GetChildAttrib("h"));
+        init_data.atlas.wall_1_br_000.w = std::stoi(atlas.GetChildAttrib("w"));
+    }else return false;
+    
+    if(atlas.FindChildElem("wall_1_br_001")){
+        init_data.atlas.wall_1_br_001.x = std::stoi(atlas.GetChildAttrib("x"));
+        init_data.atlas.wall_1_br_001.y = std::stoi(atlas.GetChildAttrib("y"));
+        init_data.atlas.wall_1_br_001.h = std::stoi(atlas.GetChildAttrib("h"));
+        init_data.atlas.wall_1_br_001.w = std::stoi(atlas.GetChildAttrib("w"));
+    }else return false;
+    
+    if(atlas.FindChildElem("wall_1_br_010")){
+        init_data.atlas.wall_1_br_010.x = std::stoi(atlas.GetChildAttrib("x"));
+        init_data.atlas.wall_1_br_010.y = std::stoi(atlas.GetChildAttrib("y"));
+        init_data.atlas.wall_1_br_010.h = std::stoi(atlas.GetChildAttrib("h"));
+        init_data.atlas.wall_1_br_010.w = std::stoi(atlas.GetChildAttrib("w"));
+    }else return false;
+    
+    if(atlas.FindChildElem("wall_1_br_011")){
+        init_data.atlas.wall_1_br_011.x = std::stoi(atlas.GetChildAttrib("x"));
+        init_data.atlas.wall_1_br_011.y = std::stoi(atlas.GetChildAttrib("y"));
+        init_data.atlas.wall_1_br_011.h = std::stoi(atlas.GetChildAttrib("h"));
+        init_data.atlas.wall_1_br_011.w = std::stoi(atlas.GetChildAttrib("w"));
+    }else return false;
+    
+    if(atlas.FindChildElem("wall_1_br_100")){
+        init_data.atlas.wall_1_br_100.x = std::stoi(atlas.GetChildAttrib("x"));
+        init_data.atlas.wall_1_br_100.y = std::stoi(atlas.GetChildAttrib("y"));
+        init_data.atlas.wall_1_br_100.h = std::stoi(atlas.GetChildAttrib("h"));
+        init_data.atlas.wall_1_br_100.w = std::stoi(atlas.GetChildAttrib("w"));
+    }else return false;
+    
+    if(atlas.FindChildElem("wall_1_br_101")){
+        init_data.atlas.wall_1_br_101.x = std::stoi(atlas.GetChildAttrib("x"));
+        init_data.atlas.wall_1_br_101.y = std::stoi(atlas.GetChildAttrib("y"));
+        init_data.atlas.wall_1_br_101.h = std::stoi(atlas.GetChildAttrib("h"));
+        init_data.atlas.wall_1_br_101.w = std::stoi(atlas.GetChildAttrib("w"));
+    }else return false;
+    
+    if(atlas.FindChildElem("wall_1_br_110")){
+        init_data.atlas.wall_1_br_110.x = std::stoi(atlas.GetChildAttrib("x"));
+        init_data.atlas.wall_1_br_110.y = std::stoi(atlas.GetChildAttrib("y"));
+        init_data.atlas.wall_1_br_110.h = std::stoi(atlas.GetChildAttrib("h"));
+        init_data.atlas.wall_1_br_110.w = std::stoi(atlas.GetChildAttrib("w"));
+    }else return false;
+    
+    if(atlas.FindChildElem("wall_1_br_111")){
+        init_data.atlas.wall_1_br_111.x = std::stoi(atlas.GetChildAttrib("x"));
+        init_data.atlas.wall_1_br_111.y = std::stoi(atlas.GetChildAttrib("y"));
+        init_data.atlas.wall_1_br_111.h = std::stoi(atlas.GetChildAttrib("h"));
+        init_data.atlas.wall_1_br_111.w = std::stoi(atlas.GetChildAttrib("w"));
+    }else return false;
+    
+    if(atlas.FindChildElem("wall_1_bl_000")){
+        init_data.atlas.wall_1_bl_000.x = std::stoi(atlas.GetChildAttrib("x"));
+        init_data.atlas.wall_1_bl_000.y = std::stoi(atlas.GetChildAttrib("y"));
+        init_data.atlas.wall_1_bl_000.h = std::stoi(atlas.GetChildAttrib("h"));
+        init_data.atlas.wall_1_bl_000.w = std::stoi(atlas.GetChildAttrib("w"));
+    }else return false;
+    
+    if(atlas.FindChildElem("wall_1_bl_001")){
+        init_data.atlas.wall_1_bl_001.x = std::stoi(atlas.GetChildAttrib("x"));
+        init_data.atlas.wall_1_bl_001.y = std::stoi(atlas.GetChildAttrib("y"));
+        init_data.atlas.wall_1_bl_001.h = std::stoi(atlas.GetChildAttrib("h"));
+        init_data.atlas.wall_1_bl_001.w = std::stoi(atlas.GetChildAttrib("w"));
+    }else return false;
+    
+    if(atlas.FindChildElem("wall_1_bl_010")){
+        init_data.atlas.wall_1_bl_010.x = std::stoi(atlas.GetChildAttrib("x"));
+        init_data.atlas.wall_1_bl_010.y = std::stoi(atlas.GetChildAttrib("y"));
+        init_data.atlas.wall_1_bl_010.h = std::stoi(atlas.GetChildAttrib("h"));
+        init_data.atlas.wall_1_bl_010.w = std::stoi(atlas.GetChildAttrib("w"));
+    }else return false;
+    
+    if(atlas.FindChildElem("wall_1_bl_011")){
+        init_data.atlas.wall_1_bl_011.x = std::stoi(atlas.GetChildAttrib("x"));
+        init_data.atlas.wall_1_bl_011.y = std::stoi(atlas.GetChildAttrib("y"));
+        init_data.atlas.wall_1_bl_011.h = std::stoi(atlas.GetChildAttrib("h"));
+        init_data.atlas.wall_1_bl_011.w = std::stoi(atlas.GetChildAttrib("w"));
+    }else return false;
+    
+    if(atlas.FindChildElem("wall_1_bl_100")){
+        init_data.atlas.wall_1_bl_100.x = std::stoi(atlas.GetChildAttrib("x"));
+        init_data.atlas.wall_1_bl_100.y = std::stoi(atlas.GetChildAttrib("y"));
+        init_data.atlas.wall_1_bl_100.h = std::stoi(atlas.GetChildAttrib("h"));
+        init_data.atlas.wall_1_bl_100.w = std::stoi(atlas.GetChildAttrib("w"));
+    }else return false;
+    
+    if(atlas.FindChildElem("wall_1_bl_101")){
+        init_data.atlas.wall_1_bl_101.x = std::stoi(atlas.GetChildAttrib("x"));
+        init_data.atlas.wall_1_bl_101.y = std::stoi(atlas.GetChildAttrib("y"));
+        init_data.atlas.wall_1_bl_101.h = std::stoi(atlas.GetChildAttrib("h"));
+        init_data.atlas.wall_1_bl_101.w = std::stoi(atlas.GetChildAttrib("w"));
+    }else return false;
+    
+    if(atlas.FindChildElem("wall_1_bl_110")){
+        init_data.atlas.wall_1_bl_110.x = std::stoi(atlas.GetChildAttrib("x"));
+        init_data.atlas.wall_1_bl_110.y = std::stoi(atlas.GetChildAttrib("y"));
+        init_data.atlas.wall_1_bl_110.h = std::stoi(atlas.GetChildAttrib("h"));
+        init_data.atlas.wall_1_bl_110.w = std::stoi(atlas.GetChildAttrib("w"));
+    }else return false;
+    
+    if(atlas.FindChildElem("wall_1_bl_111")){
+        init_data.atlas.wall_1_bl_111.x = std::stoi(atlas.GetChildAttrib("x"));
+        init_data.atlas.wall_1_bl_111.y = std::stoi(atlas.GetChildAttrib("y"));
+        init_data.atlas.wall_1_bl_111.h = std::stoi(atlas.GetChildAttrib("h"));
+        init_data.atlas.wall_1_bl_111.w = std::stoi(atlas.GetChildAttrib("w"));
+    }else return false;
+    
     return true;
 }
 
@@ -118,7 +337,7 @@ bool load_config(std::string path){
     }
     
     if(config.FindChildElem("atlas")){
-        load_atlas(config.GetChildAttrib("file"));
+        if( !load_atlas(config.GetChildAttrib("file")) ) std::cout << "File output.\n";
     }
     
     if(config.FindChildElem("graphics")){
@@ -171,10 +390,12 @@ void init(std::string title){
         std::exit(-1);
     }
     
-    if(!b.load_level("levels/lvl1.lvl")){
-        b.data.resize(7);
+    init_sound();
+    
+    if(true||!b.load_level("levels/lvl1.lvl")){
+        b.data.resize(17);
         for(int i = 0; i < b.data.size(); i++)
-            b.data[i].resize(7);
+            b.data[i].resize(15);
         
         for(int i = 0; i < b.data.size(); i++){
             for(int j = 0; j < b.data[i].size(); j++){
@@ -182,7 +403,9 @@ void init(std::string title){
                 
                 b.data[i][j].type=floor_t::floor;
                 
-                if(i&1&&j&1)b.data[i][j].type=floor_t::wall;
+                //if(i&1&&j&1)b.data[i][j].type=floor_t::wall;
+                //if(i&1&&j&1)b.data[i][j].cell_data = new wall_t{};
+                
                 
             }
         }

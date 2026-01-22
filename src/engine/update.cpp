@@ -1,6 +1,7 @@
 #include "main.h"
 #include "io/keyboard.h"
 #include "io/mouse.h"
+#include "audio/audio.h"
 
 #include <iostream>
 #include <chrono>
@@ -26,7 +27,7 @@ bool paused = true;
 std::chrono::time_point<std::chrono::system_clock> pause_time;
 
 void update(double timeStep){
-    
+    play_sound("res/audio/metronome-85688.mp3");
     std::chrono::time_point<std::chrono::system_clock> now = std::chrono::system_clock::now();
     
     if(pause_request){
@@ -67,6 +68,8 @@ void update(double timeStep){
         movement = 0;
         
         sub_beat = 4;
+        
+        play_sound("res/audio/metronome-85688.mp3");
         
         return;
     }

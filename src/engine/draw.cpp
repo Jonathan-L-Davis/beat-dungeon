@@ -113,7 +113,12 @@ void level_editor(){
         for(int i = 0; i < 2; i++)
             if(B_size[i]<1) B_size[i] = 1;
         
-        if(do_resize) b.resize(B_size[0],B_size[1]);
+            if(do_resize){
+                b.resize(B_size[0],B_size[1]);
+                b.player.x = std::min((uint32_t)B_size[0]-1,b.player.x);
+                b.player.y = std::min((uint32_t)B_size[1]-1,b.player.y);
+                b.update_wall_borders();
+            }
         }
         
         {
@@ -191,6 +196,9 @@ void level_editor(){
         if(ImGui::Button("exit")) new_type = floor_t::exit;
         
         static bool edit_plate = false;
+        static int wall_x;
+        static int wall_y;
+        static bool edit_wall = false;
         static int plate_x;
         static int plate_y;
         
@@ -204,12 +212,15 @@ void level_editor(){
                 if(b.data[X_block][Y_block].type!=new_type){
                     
                     if(b.data[X_block][Y_block].type==floor_t::plate) delete (plate_t*)b.data[X_block][Y_block].cell_data;
+                    if(b.data[X_block][Y_block].type==floor_t::wall ) delete (wall_t* )b.data[X_block][Y_block].cell_data;
                     
                     b.data[X_block][Y_block].type = new_type;
                     
-                    if(b.data[X_block][Y_block].type==floor_t::plate){
-                        b.data[X_block][Y_block].cell_data = new plate_t{};
-                    }
+                    if(b.data[X_block][Y_block].type==floor_t::plate) b.data[X_block][Y_block].cell_data = new plate_t{};
+                    if(b.data[X_block][Y_block].type==floor_t::wall ) b.data[X_block][Y_block].cell_data = new wall_t{};
+                    
+                    
+                    b.update_wall_borders();
                 }
                 
             }
@@ -217,10 +228,16 @@ void level_editor(){
             if(mouse.rightDown){
                 
                 edit_plate = b.data[X_block][Y_block].type==floor_t::plate;
+                edit_wall  = b.data[X_block][Y_block].type==floor_t::wall;
                 
                 if(edit_plate){
                     plate_x = X_block;
                     plate_y = Y_block;
+                }
+                
+                if(edit_wall){
+                    wall_x = X_block;
+                    wall_y = Y_block;
                 }
                 
             }
@@ -229,6 +246,9 @@ void level_editor(){
         
         
     ImGui::End();
+    
+    if(plate_x>=b.data.size()||plate_y>b.data[0].size()||b.data[plate_x][plate_y].type!=floor_t::plate)
+        edit_plate = false;
     
     if(edit_plate&&draw){
     ImGui::Begin("Plate editor");
@@ -249,6 +269,19 @@ void level_editor(){
         int max_ticks = P.max_ticks;
         ImGui::InputInt("max ticks",&max_ticks,1,5);
         P.max_ticks = max_ticks;
+        
+    ImGui::End();
+    }
+    
+    if(wall_x>=b.data.size()||wall_y>b.data[0].size()||b.data[wall_x][wall_y].type!=floor_t::wall)
+        edit_wall = false;
+    if(edit_wall&&draw){
+    ImGui::Begin("Wall editor");
+        wall_t& W = *(wall_t*)b.data[wall_x][wall_y].cell_data;
+        
+        int surroundings = W.surroundings;
+        ImGui::InputInt("Surroundings",&surroundings,1,1);
+        W.surroundings = surroundings;
         
     ImGui::End();
     }

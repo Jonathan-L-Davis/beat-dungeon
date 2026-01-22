@@ -223,7 +223,6 @@ namespace graphics{
             success &= create_descriptor_sets();
             success &= create_command_buffers();
             success &= create_sync_objects();
-            std::cout << "finished vulkan initialization.\n";
             
             //////////////////////////// Pure IMGUI set up after this point. Figure out which variables are needed and move them into a proper function.
             
