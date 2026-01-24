@@ -9,10 +9,15 @@ extern keyRegistrar keyboard;
 #include "game/beat-dungeon.h"
 
 #include "audio/audio.h"
+#include <cmath>
+
+#include <thread>
 
 extern key up,down,left,right;
 init_data_t init_data;
 extern board b;
+
+std::thread audio_thread;
 
 bool load_atlas(std::string path){
     CMarkup atlas;
@@ -29,6 +34,20 @@ bool load_atlas(std::string path){
         init_data.atlas.player.y = std::stoi(atlas.GetChildAttrib("y"));
         init_data.atlas.player.h = std::stoi(atlas.GetChildAttrib("h"));
         init_data.atlas.player.w = std::stoi(atlas.GetChildAttrib("w"));
+    }else return false;
+    
+    if(atlas.FindChildElem("wall_top")){
+        init_data.atlas.wall_top.x = std::stoi(atlas.GetChildAttrib("x"));
+        init_data.atlas.wall_top.y = std::stoi(atlas.GetChildAttrib("y"));
+        init_data.atlas.wall_top.h = std::stoi(atlas.GetChildAttrib("h"));
+        init_data.atlas.wall_top.w = std::stoi(atlas.GetChildAttrib("w"));
+    }else return false;
+    
+    if(atlas.FindChildElem("wall")){
+        init_data.atlas.wall.x = std::stoi(atlas.GetChildAttrib("x"));
+        init_data.atlas.wall.y = std::stoi(atlas.GetChildAttrib("y"));
+        init_data.atlas.wall.h = std::stoi(atlas.GetChildAttrib("h"));
+        init_data.atlas.wall.w = std::stoi(atlas.GetChildAttrib("w"));
     }else return false;
     
     if(atlas.FindChildElem("drummer")){
@@ -92,6 +111,13 @@ bool load_atlas(std::string path){
         init_data.atlas.exit.y = std::stoi(atlas.GetChildAttrib("y"));
         init_data.atlas.exit.h = std::stoi(atlas.GetChildAttrib("h"));
         init_data.atlas.exit.w = std::stoi(atlas.GetChildAttrib("w"));
+    }else return false;
+    
+    if(atlas.FindChildElem("notes")){
+        init_data.atlas.notes.x = std::stoi(atlas.GetChildAttrib("x"));
+        init_data.atlas.notes.y = std::stoi(atlas.GetChildAttrib("y"));
+        init_data.atlas.notes.h = std::stoi(atlas.GetChildAttrib("h"));
+        init_data.atlas.notes.w = std::stoi(atlas.GetChildAttrib("w"));
     }else return false;
     
     if(atlas.FindChildElem("wall_1_tl_000")){
@@ -391,8 +417,9 @@ void init(std::string title){
     }
     
     init_sound();
+    audio_thread = std::thread(audio_func);
     
-    if(true||!b.load_level("levels/lvl1.lvl")){
+    if(!b.load_level("levels/lvl1.lvl")){
         b.data.resize(17);
         for(int i = 0; i < b.data.size(); i++)
             b.data[i].resize(15);
@@ -401,7 +428,7 @@ void init(std::string title){
             for(int j = 0; j < b.data[i].size(); j++){
                 
                 
-                b.data[i][j].type=floor_t::floor;
+                b.data[i][j].type=tile_t::floor;
                 
                 //if(i&1&&j&1)b.data[i][j].type=floor_t::wall;
                 //if(i&1&&j&1)b.data[i][j].cell_data = new wall_t{};
@@ -410,9 +437,13 @@ void init(std::string title){
             }
         }
     }
+    
+    srand(0);// literally doesn't matter. It's only used for randomness in the generation of floor tiles in the editor.
+    
 }
 
 void terminate(){
+    audio_thread.join();
     graphics::terminate();
     save_config("config.xml");
 }

@@ -1,14 +1,76 @@
 #include "audio.h"
+#include "main.h"
 
 #include <SDL3/SDL.h>
 #include <SDL3/SDL_audio.h>
+#include <map>
+#include <vector>
+#include <mutex>
+
+#include "util/tinywav/tinywav.h"
 
 SDL_AudioSpec spec;
 SDL_AudioStream *stream = NULL;
 
 float *audio_buffer;
-static int current_sine_sample = 0;
-constexpr int sample_rate = 44100;
+
+constexpr int sample_rate = 24000;//44100;
+int idx = 0;
+
+uint32_t metronome_sound_size;
+uint8_t* metronome_sound_data;
+
+std::mutex M;
+
+struct audio_index{
+    std::string instrument;
+    uint32_t idx;
+    float volume;
+};
+
+std::vector<audio_index> audio_indices;
+std::map<std::string,std::vector<float>> instruments;
+
+void audio_func(){
+    
+    while(!quit){
+        constexpr int minimum_audio = (sample_rate * sizeof (float)) / 2;
+        if (SDL_GetAudioStreamQueued(stream) < minimum_audio) {
+            std::scoped_lock L(M);
+            static float samples[512];  /* this will feed 512 samples each frame until we get to our maximum. */
+            
+            std::memset(samples,0,512*4);
+            
+            for(audio_index& index : audio_indices ){
+                for(int i = 0; i < 512; i++){
+                    
+                    const std::vector<float>& instrument = instruments[index.instrument];
+                    
+                    samples[i] += index.volume*instrument[index.idx];
+                    index.idx += 1;
+                    
+                    if( index.idx>=instrument.size() ){
+                        break;
+                    }
+                }
+            }
+            
+            // erases any sound that has finished playing. This way we don't play instruments for too long/access bad memory.
+            for(int i = ((int)audio_indices.size())-1; i >= 0;  i--){
+                const std::vector<float>& instrument = instruments[audio_indices[i].instrument];
+                
+                if( audio_indices[i].idx>=instrument.size() ){
+                    audio_indices.erase(audio_indices.begin()+i);
+                }
+            }
+            /* feed the new data to the stream. It will queue at the end, and trickle out as the hardware needs more data. */
+            SDL_PutAudioStreamData(stream, samples, 4*512);
+        }
+        
+        std::this_thread::sleep_for(std::chrono::milliseconds(1));
+    }
+    
+}
 
 void init_sound(){
     if (!SDL_Init(SDL_INIT_AUDIO))
@@ -19,30 +81,38 @@ void init_sound(){
     
     spec.channels = 1;
     spec.format = SDL_AUDIO_F32;
-    spec.freq = 44100;
+    spec.freq = sample_rate;
     
     stream = SDL_OpenAudioDeviceStream(SDL_AUDIO_DEVICE_DEFAULT_PLAYBACK, &spec, NULL, NULL);
     SDL_ResumeAudioStreamDevice(stream);
+    
+    TinyWav metronome_wav;
+    tinywav_open_read(&metronome_wav, "res/audio/metronome.wav", TW_SPLIT);
+    
+    int block_size = 20000;
+    float *samples = new float[2*block_size];
+    
+    float* samplePtrs[2];
+    for (int j = 0; j < 2; ++j) {
+        samplePtrs[j] = samples + j*block_size;
+    }
+    
+    std::vector<float> metronome;
+    
+    tinywav_read_f(&metronome_wav, samplePtrs, block_size);
+    
+    float mmm = 0;
+    for(int i = 0; i < block_size; i++){
+        metronome.push_back(samplePtrs[0][i]);
+    }
+    
+    tinywav_close_read(&metronome_wav);
+    
+    instruments["metronome"] = metronome;
+    
 }
 
-void play_sound(std::string file_name){
-    const int minimum_audio = (sample_rate * sizeof (float)) / 2;  /* 8000 float samples per second. Half of that. */
-    if (SDL_GetAudioStreamQueued(stream) < minimum_audio) {
-        static float samples[512];  /* this will feed 512 samples each frame until we get to our maximum. */
-        int i;
-
-        /* generate a 440Hz pure tone */
-        for (i = 0; i < SDL_arraysize(samples); i++) {
-            const int freq = 220;
-            const float phase = current_sine_sample * freq / float(sample_rate);
-            samples[i] = 0*SDL_sinf(phase * 2 * SDL_PI_F);
-            current_sine_sample++;
-        }
-
-        /* wrapping around to avoid floating-point errors */
-        current_sine_sample %= sample_rate;
-
-        /* feed the new data to the stream. It will queue at the end, and trickle out as the hardware needs more data. */
-        SDL_PutAudioStreamData(stream, samples, 4*512);
-    }
+void play_sound(std::string sound_name, float volume){
+    std::scoped_lock L(M);
+    audio_indices.push_back({sound_name,0,0});
 }

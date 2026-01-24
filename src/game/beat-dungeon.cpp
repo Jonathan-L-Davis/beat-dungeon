@@ -6,25 +6,30 @@
 
 #include "engine/io/keyboard.h"
 
+#include "audio/audio.h"
+
 constexpr uint32_t version = 0;
+constexpr int sax_cooldown = 2;
 
-
-
-std::string to_str(floor_t strMe){
+std::string to_str(tile_t strMe){
     switch(strMe){
-        case floor_t::pit         : return "pit";
-        case floor_t::floor       : return "floor";
-        case floor_t::wall        : return "wall";
-        case floor_t::plate       : return "plate";
-        case floor_t::door_open   : return "door_open";
-        case floor_t::door_closed : return "door_closed";
-        case floor_t::firepit_on  : return "firepit_on";
-        case floor_t::firepit_off : return "firepit_off";
-        case floor_t::exit        : return "exit";
+        case tile_t::pit         : return "pit";
+        case tile_t::floor       : return "floor";
+        case tile_t::wall        : return "wall";
+        case tile_t::plate       : return "plate";
+        case tile_t::door_open   : return "door_open";
+        case tile_t::door_closed : return "door_closed";
+        case tile_t::firepit_on  : return "firepit_on";
+        case tile_t::firepit_off : return "firepit_off";
+        case tile_t::exit        : return "exit";
     }
 }
 
 bool board::load_level(std::string file_name){
+    
+    player = player_t();
+    
+    level = file_name;
     
     std::vector<uint8_t> file = load_file(file_name);
     
@@ -45,18 +50,30 @@ bool board::load_level(std::string file_name){
     for(int i = 0; i < data.size(); i++){
         for(int j = 0; j < data[i].size(); j++){
             read_from_buffer( file, idx, *(uint8_t*)&data[i][j].type);idx++;
-            if(data[i][j].type==floor_t::plate){
+            switch(data[i][j].type){
+            case tile_t::pit: data[i][j].cell_data = new pit_t{}; break;
+            case tile_t::firepit_on: data[i][j].cell_data = new firepit_t{}; break;
+            case tile_t::firepit_off: data[i][j].cell_data = new firepit_t{}; break;
+            case tile_t::floor: data[i][j].cell_data = new floor_t{}; break;
+            case tile_t::exit: data[i][j].cell_data = new exit_t{}; break;
+            case tile_t::plate:{
                 data[i][j].cell_data = new plate_t{};
                 plate_t& plate = *((plate_t*)data[i][j].cell_data);
-                read_from_buffer(file, idx, plate.x);idx++;
-                read_from_buffer(file, idx, plate.y);idx++;
+                idx+=2;// skipping over the xy coords for now. They'll be eliminated soon.
                 read_from_buffer(file, idx, plate.ticks_alive);idx++;
                 read_from_buffer(file, idx, plate.max_ticks);idx++;
-            }else
-            if(data[i][j].type==floor_t::wall){
+            }break;
+            case tile_t::wall:{
                 data[i][j].cell_data = new wall_t{};
                 //wall_t& wall = *((wall_t*)data[i][j].cell_data);
                 //read_from_buffer(file, idx, wall.character);idx++;
+            }break;
+            case tile_t::door_closed:
+            case tile_t::door_open:{
+                data[i][j].cell_data = new door_t{};
+                //wall_t& wall = *((wall_t*)data[i][j].cell_data);
+                //read_from_buffer(file, idx, wall.character);idx++;
+            }break;
             }
         }
     }
@@ -64,12 +81,23 @@ bool board::load_level(std::string file_name){
     read_from_buffer(file, idx, player.x);idx+=4;
     read_from_buffer(file, idx, player.y);idx+=4;
     
+    saxophones = {};
+    drums      = {};
+    notes      = {};
+    demons     = {};
+    fireballs  = {};
+    
+    
+    
     update_wall_borders();
     
     return true;
 }
 
 bool board::save_level(std::string file_name){
+    
+    if(file_name=="") file_name = level;
+    level = file_name;
     
     std::vector<uint8_t> file;
     append_to_buffer(file,version);
@@ -95,10 +123,9 @@ bool board::save_level(std::string file_name){
             
             append_to_buffer(file,(uint8_t)c.type);
             
-            if(c.type==floor_t::plate){
+            if(c.type==tile_t::plate){
                 plate_t& plate = *((plate_t*)c.cell_data);
-                append_to_buffer(file, (uint8_t)plate.x);
-                append_to_buffer(file, (uint8_t)plate.y);
+                append_to_buffer(file, (uint8_t)plate.character);
                 append_to_buffer(file, (uint8_t)plate.ticks_alive);
                 append_to_buffer(file, (uint8_t)plate.max_ticks);
             }
@@ -115,7 +142,7 @@ void board::resize(int x, int y){
     
     for(int i = 0; i < data.size(); i++){
         for(int j = 0; j < data[0].size(); j++){
-            if( (i>=x || j>=y) && data[i][j].type == floor_t::plate ){
+            if( (i>=x || j>=y) && data[i][j].type == tile_t::plate ){
                 delete (plate_t*) data[i][j].cell_data;
                 data[i][j].cell_data = nullptr;
             }
@@ -134,7 +161,7 @@ void board::resize(int x, int y){
         for(int j = 0; j < data[0].size(); j++){
             if( (i>=old_x || j>=old_y) ){
                 data[i][j].cell_data = nullptr;
-                data[i][j].type = floor_t::floor;
+                data[i][j].type = tile_t::floor;
             }
         }
     }
@@ -146,9 +173,9 @@ bool board::is_flingable(uint32_t x,uint32_t y){
     
     if(y>=data[0].size()) return false;
     
-    if(data[x][y].type==floor_t::wall) return true;
-    if(data[x][y].type==floor_t::firepit_off) return true;
-    if(data[x][y].type==floor_t::door_closed) return true;
+    if(data[x][y].type==tile_t::wall) return true;
+    if(data[x][y].type==tile_t::firepit_off) return true;
+    if(data[x][y].type==tile_t::door_closed) return true;
     
     return false;
 }
@@ -159,16 +186,46 @@ bool board::is_walkable(uint32_t x,uint32_t y){
     
     if(y>=data[0].size()) return false;
     
-    if(data[x][y].type==floor_t::floor) return true;
-    if(data[x][y].type==floor_t::plate) return true;
-    if(data[x][y].type==floor_t::door_open) return true;
-    if(data[x][y].type==floor_t::exit) return true;
+    if(data[x][y].type==tile_t::floor) return true;
+    if(data[x][y].type==tile_t::plate) return true;
+    if(data[x][y].type==tile_t::door_open) return true;
+    if(data[x][y].type==tile_t::exit) return true;
+    
+    return false;
+}
+
+bool board::is_visible(uint32_t x,uint32_t y){
+    
+    if(x>=data.size()) return false;
+    
+    if(y>=data[0].size()) return false;
+    
+    if(data[x][y].type==tile_t::floor) return true;
+    if(data[x][y].type==tile_t::plate) return true;
+    if(data[x][y].type==tile_t::door_open) return true;
+    if(data[x][y].type==tile_t::exit) return true;
+    if(data[x][y].type==tile_t::pit) return true;
+    if(data[x][y].type==tile_t::firepit_on) return true;
+    if(data[x][y].type==tile_t::firepit_off) return true;
     
     return false;
 }
 
 void board::step(int beat, uint8_t movement){
+    
+    if(player.dead || player.won){
+        player.anim_phase += 1;
+        if(player.anim_phase >= 16){
+            player.anim_phase = 0;
+            //player.dead = false;
+            //player.won  = false;
+            //load_level(level);
+        }
+        return;
+    }
+    
     step_plates(beat);
+    step_notes(beat);
     step_saxophone(beat);
     step_player(beat,movement);
 }
@@ -177,16 +234,28 @@ void board::step_plates(int beat){
     for( int i = 0; i < data.size(); i++ ){
         for( int j = 0; j < data[i].size(); j++ ){
             cell_t& cell = data[i][j];
-            if(cell.type==floor_t::plate){
+            if(cell.type==tile_t::plate){
                 plate_t& plate = *(plate_t*)(cell.cell_data);
                 // if plate is stepped on, make it alive.
-                if(player.x==i&&player.y==j){// will need to loop through all entities later to do this as well.
+                uint8_t character = plate.character;
+                bool stepped_on = (player.x==i&&player.y==j);
+                
+                // E for everyone. (Actually stands for entity here lol)
+                for(const auto& E:saxophones) if(E.x==i&&E.y==j) stepped_on = true;
+                for(const auto& E:drums) if(E.x==i&&E.y==j) stepped_on = true;
+                for(const auto& E:demons) if(E.x==i&&E.y==j) stepped_on = true;
+                for(const auto& E:notes) if(E.x==i&&E.y==j) stepped_on = true;
+                for(const auto& E:fireballs) if(E.x==i&&E.y==j) stepped_on = true;
+                
+                if(stepped_on){// will need to loop through all entities later to do this as well.
                     if(plate.ticks_alive==0){// hopefully prevents double triggering
-                        if( data[plate.x][plate.y].type==floor_t::door_open )
-                            data[plate.x][plate.y].type = floor_t::door_closed;
-                        else
-                        if( data[plate.x][plate.y].type==floor_t::door_closed )
-                            data[plate.x][plate.y].type = floor_t::door_open;
+                        for( int x = 0; x < data.size(); x++ )
+                            for( int y = 0; y < data[x].size(); y++ )
+                                if( data[x][y].type==tile_t::door_open && (*(door_t*)data[x][y].cell_data).character==character )
+                                    data[x][y].type = tile_t::door_closed;
+                                else
+                                if( data[x][y].type==tile_t::door_closed && (*(door_t*)data[x][y].cell_data).character==character )
+                                    data[x][y].type = tile_t::door_open;
                     }
                     plate.ticks_alive = plate.max_ticks;
                 }
@@ -195,12 +264,13 @@ void board::step_plates(int beat){
                     plate.ticks_alive--;
                     // put back to original state.
                     if(plate.ticks_alive==0){
-                        
-                        if( data[plate.x][plate.y].type==floor_t::door_open )
-                            data[plate.x][plate.y].type = floor_t::door_closed;
-                        else
-                        if( data[plate.x][plate.y].type==floor_t::door_closed )
-                            data[plate.x][plate.y].type = floor_t::door_open;
+                        for( int x = 0; x < data.size(); x++ )
+                            for( int y = 0; y < data[x].size(); y++ )
+                                if( data[x][y].type==tile_t::door_open && (*(door_t*)data[x][y].cell_data).character==character )
+                                    data[x][y].type = tile_t::door_closed;
+                                else
+                                if( data[x][y].type==tile_t::door_closed && (*(door_t*)data[x][y].cell_data).character==character )
+                                    data[x][y].type = tile_t::door_open;
                     }
                 }
             }
@@ -293,8 +363,32 @@ void board::step_player(int beat,uint8_t movement){
         return;
     }
     
+    for(sax_t& sax:saxophones)
+        if(player.x==sax.x&&player.y==sax.y)
+            player.dead=true;
+    
+    for(drum_t& drummer:drums)
+        if(player.x==drummer.x&&player.y==drummer.y)
+            player.dead=true;
+    
+    for(demon_t& demon:demons)
+        if(player.x==demon.x&&player.y==demon.y)
+            player.dead=true;
+    
+    for(notes_t& note:notes)
+        if(player.x==note.x&&player.y==note.y)
+            player.dead=true;
+    
+    for(fireball_t& fireball:fireballs)
+        if(player.x==fireball.x&&player.y==fireball.y)
+            player.dead=true;
+    
+    if(player.dead) return;
+    
     player.x = new_x;
     player.y = new_y;
+    
+    if(data[player.x][player.y].type==tile_t::exit) player.won = true;
     
 }
 
@@ -304,7 +398,49 @@ void board::step_saxophone(int beat){
     if(data[0].size()==0) return;
     
     for(sax_t& sax:saxophones){
-        constexpr uint32_t m = 0xFFFF'FFFF;// minus one, but for avoiding signed int undefined behavior.
+        
+        if(sax.shot_cooldown>0) sax.shot_cooldown--;
+        
+        int distance = -1;
+        
+        for(uint32_t y = sax.y; y < data.size()&&is_visible(sax.x,y);y--){
+            if( player.x == sax.x && player.y == y && sax.shot_cooldown==0 ){
+                sax.movement = 1;
+                distance = sax.y-y;
+                break;
+            }
+        }
+        
+        for(uint32_t x = sax.x; x < data.size()&&is_visible(x,sax.y);x--){
+            if( player.x == x && player.y == sax.y && sax.shot_cooldown==0 ){
+                sax.movement = 2;
+                distance = sax.x-x;
+                break;
+            }
+        }
+        
+        for(uint32_t y = sax.y; y < data.size()&&is_visible(sax.x,y);y++){
+            if( player.x == sax.x && player.y == y && sax.shot_cooldown==0 ){
+                sax.movement = 4;
+                distance = y-sax.y;
+                break;
+            }
+        }
+        
+        for(uint32_t x = sax.x; x < data.size()&&is_visible(x,sax.y);x++){
+            if( player.x == x && player.y == sax.y && sax.shot_cooldown==0 ){
+                sax.movement = 8;
+                distance = x-sax.x;
+                break;
+            }
+        }
+        
+        bool shoot = (distance>-1&&distance<=4&&sax.shot_cooldown==0);
+        
+        for(const auto& note:notes){
+            if(sax.x==note.x&&sax.y==note.y)
+                shoot = true;
+        }
         
         uint8_t movement = sax.movement;
         uint32_t new_x = sax.x, new_y = sax.y;
@@ -329,17 +465,108 @@ void board::step_saxophone(int beat){
             new_x += 1;
         }
         
+        if(shoot){
+            // making the assumption that new pos is valid for notes to spawn in on.
+            notes_t new_notes;
+            new_notes.x = new_x;
+            new_notes.y = new_y;
+            new_notes.movement = sax.movement;
+            // these 2 lines switch it's direction. Don't worry about it too much.
+            sax.movement |= (sax.movement<<4);
+            sax.movement >>= 2;
+            sax.shot_cooldown = sax_cooldown;
+            if(data[new_notes.x][new_notes.y].type==tile_t::firepit_on){
+                data[new_notes.x][new_notes.y].type = tile_t::firepit_off;
+                continue;
+            }
+            notes.push_back(new_notes);
+        }
+        
         if(!is_walkable(new_x,new_y)){
-            player.moving_up = false;
-            player.moving_left = false;
-            player.moving_down = false;
-            player.moving_right = false;
-            
+            // these 2 lines switch it's direction. Don't worry about it too much.
+            sax.movement |= (sax.movement<<4);
+            sax.movement >>= 2;
             continue;
         }
         
+        for(uint32_t y = sax.y; y < data.size()&&is_visible(sax.x,y);y--)
+            if( player.x == sax.x && player.y == y && sax.shot_cooldown==0 )
+                sax.movement = 1;
+        
+        for(uint32_t x = sax.x; x < data.size()&&is_visible(x,sax.y);x--)
+            if( player.x == x && player.y == sax.y && sax.shot_cooldown==0 )
+                sax.movement = 2;
+        
+        for(uint32_t y = sax.y; y < data.size()&&is_visible(sax.x,y);y++)
+            if( player.x == sax.x && player.y == y && sax.shot_cooldown==0 )
+                sax.movement = 4;
+        
+        for(uint32_t x = sax.x; x < data.size()&&is_visible(x,sax.y);x++)
+            if( player.x == x && player.y == sax.y && sax.shot_cooldown==0 )
+                sax.movement = 8;
+        
         sax.x = new_x;
         sax.y = new_y;
+    }
+}
+
+void board::step_notes(int beat){
+    
+    if(data.size()==0) return;
+    if(data[0].size()==0) return;
+    
+    for(notes_t& note:notes){
+        uint8_t movement = note.movement;
+        uint32_t new_x = note.x, new_y = note.y;
+        bool move_up    =  (movement&1)&&!(movement&2)&&!(movement&4)&&!(movement&8);
+        bool move_left  = !(movement&1)&& (movement&2)&&!(movement&4)&&!(movement&8);
+        bool move_down  = !(movement&1)&&!(movement&2)&& (movement&4)&&!(movement&8);
+        bool move_right = !(movement&1)&&!(movement&2)&&!(movement&4)&& (movement&8);
+        
+        if(move_up){
+            new_y -= 1;
+        }
+        
+        if(move_left){
+            new_x -= 1;
+        }
+        
+        if(move_down){
+            new_y += 1;
+        }
+        
+        if(move_right){
+            new_x += 1;
+        }
+        
+        if(!is_visible(new_x,new_y)){
+            note.movement = 0;// non moving notes are marked for death & removed.
+            continue;
+        }
+        
+        note.x = new_x;
+        note.y = new_y;
+        
+    }
+    
+    for(int i = notes.size()-1; i >= 0; i--){
+        notes_t& note = notes[i];
+        
+        if(data[note.x][note.y].type==tile_t::firepit_on){
+            note.movement = 0;// broken into 2 loops to catch all notes that move on a flame in the same turn.
+        }
+    }
+    
+    for(int i = notes.size()-1; i >= 0; i--){
+        notes_t& note = notes[i];
+        
+        if(data[note.x][note.y].type==tile_t::firepit_on){
+            data[note.x][note.y].type = tile_t::firepit_off;
+        }
+        
+        if(note.movement==0)
+            notes.erase(notes.begin()+i);
+        
     }
 }
 
@@ -347,18 +574,18 @@ void board::update_wall_borders(){
     for(int x = 0; x < data.size(); x++){
         for(int y = 0; y < data[x].size(); y++){
             
-            if(data[x][y].type!=floor_t::wall) continue;
+            if(data[x][y].type!=tile_t::wall) continue;
             
             uint8_t surroundings = 0;
             
-            if(                 y  >0             &&data[x  ][y-1].type==floor_t::wall) surroundings |= 0b0000'0001;
-            if(x+1<data.size()&&y  >0             &&data[x+1][y-1].type==floor_t::wall) surroundings |= 0b0000'0010;
-            if(x+1<data.size()&&                    data[x+1][y  ].type==floor_t::wall) surroundings |= 0b0000'0100;
-            if(x+1<data.size()&&y+1<data[x].size()&&data[x+1][y+1].type==floor_t::wall) surroundings |= 0b0000'1000;
-            if(                 y+1<data[x].size()&&data[x  ][y+1].type==floor_t::wall) surroundings |= 0b0001'0000;
-            if(x  >0          &&y+1<data[x].size()&&data[x-1][y+1].type==floor_t::wall) surroundings |= 0b0010'0000;
-            if(x  >0          &&                    data[x-1][y  ].type==floor_t::wall) surroundings |= 0b0100'0000;
-            if(x  >0          &&y  >0             &&data[x-1][y-1].type==floor_t::wall) surroundings |= 0b1000'0000;
+            if(                 y  >0             &&data[x  ][y-1].type==tile_t::wall) surroundings |= 0b0000'0001;
+            if(x+1<data.size()&&y  >0             &&data[x+1][y-1].type==tile_t::wall) surroundings |= 0b0000'0010;
+            if(x+1<data.size()&&                    data[x+1][y  ].type==tile_t::wall) surroundings |= 0b0000'0100;
+            if(x+1<data.size()&&y+1<data[x].size()&&data[x+1][y+1].type==tile_t::wall) surroundings |= 0b0000'1000;
+            if(                 y+1<data[x].size()&&data[x  ][y+1].type==tile_t::wall) surroundings |= 0b0001'0000;
+            if(x  >0          &&y+1<data[x].size()&&data[x-1][y+1].type==tile_t::wall) surroundings |= 0b0010'0000;
+            if(x  >0          &&                    data[x-1][y  ].type==tile_t::wall) surroundings |= 0b0100'0000;
+            if(x  >0          &&y  >0             &&data[x-1][y-1].type==tile_t::wall) surroundings |= 0b1000'0000;
             
             (*(wall_t*)data[x][y].cell_data).surroundings = surroundings;
         }
@@ -407,19 +634,19 @@ std::vector<graphics::vulkan::Vertex> draw_board(board b, float aspect_ratio){
             
             bool skip = false;
             switch(b.data[x][y].type){
-                case floor_t::wall       : break;
-                case floor_t::floor      : texel = get_tex_coords(atlas.floor,atlas.w,atlas.h);       break;
-                case floor_t::plate      : texel = get_tex_coords(atlas.plate,atlas.w,atlas.h);       break;
-                case floor_t::firepit_on : texel = get_tex_coords(atlas.fire,atlas.w,atlas.h);        break;
-                case floor_t::firepit_off: texel = get_tex_coords(atlas.fire_out,atlas.w,atlas.h);    break;
-                case floor_t::door_open  : texel = get_tex_coords(atlas.door_open,atlas.w,atlas.h);   break;
-                case floor_t::door_closed: texel = get_tex_coords(atlas.door_closed,atlas.w,atlas.h); break;
-                case floor_t::exit       : texel = get_tex_coords(atlas.exit,atlas.w,atlas.h);        break;
+                case tile_t::wall       : break;
+                case tile_t::floor      : texel = get_tex_coords(atlas.floor,atlas.w,atlas.h);       break;
+                case tile_t::plate      : texel = get_tex_coords(atlas.plate,atlas.w,atlas.h);       break;
+                case tile_t::firepit_on : texel = get_tex_coords(atlas.fire,atlas.w,atlas.h);        break;
+                case tile_t::firepit_off: texel = get_tex_coords(atlas.fire_out,atlas.w,atlas.h);    break;
+                case tile_t::door_open  : texel = get_tex_coords(atlas.door_open,atlas.w,atlas.h);   break;
+                case tile_t::door_closed: texel = get_tex_coords(atlas.door_closed,atlas.w,atlas.h); break;
+                case tile_t::exit       : texel = get_tex_coords(atlas.exit,atlas.w,atlas.h);        break;
                 default: skip = true;
             }
             
             if(skip)continue;
-            if(b.data[x][y].type==floor_t::wall){
+            if(b.data[x][y].type==tile_t::wall){
                 uint8_t tl_mask = 0b1100'0001;
                 switch( (*(wall_t*)b.data[x][y].cell_data).surroundings&tl_mask ){
                     case 0b0000'0000: texel = get_tex_coords(atlas.wall_1_tl_000,atlas.w,atlas.h);break;
@@ -498,6 +725,12 @@ std::vector<graphics::vulkan::Vertex> draw_board(board b, float aspect_ratio){
     }
     
     
+    texel = get_tex_coords(atlas.player,atlas.w,atlas.h);
+    retMe.push_back({{x0+b.player.x+dX, y0+b.player.y+dY, depth}, color, texel[0]});
+    retMe.push_back({{x1+b.player.x+dX, y0+b.player.y+dY, depth}, color, texel[1]});
+    retMe.push_back({{x1+b.player.x+dX, y1+b.player.y+dY, depth}, color, texel[2]});
+    retMe.push_back({{x0+b.player.x+dX, y1+b.player.y+dY, depth}, color, texel[3]});
+    
     texel = get_tex_coords(atlas.sax,atlas.w,atlas.h);
     for(const auto& sax:b.saxophones){
         retMe.push_back({{x0+sax.x+dX, y0+sax.y+dY, depth}, color, texel[0]});
@@ -506,11 +739,37 @@ std::vector<graphics::vulkan::Vertex> draw_board(board b, float aspect_ratio){
         retMe.push_back({{x0+sax.x+dX, y1+sax.y+dY, depth}, color, texel[3]});
     }
     
-    texel = get_tex_coords(atlas.player,atlas.w,atlas.h);
-    retMe.push_back({{x0+b.player.x+dX, y0+b.player.y+dY, depth}, color, texel[0]});
-    retMe.push_back({{x1+b.player.x+dX, y0+b.player.y+dY, depth}, color, texel[1]});
-    retMe.push_back({{x1+b.player.x+dX, y1+b.player.y+dY, depth}, color, texel[2]});
-    retMe.push_back({{x0+b.player.x+dX, y1+b.player.y+dY, depth}, color, texel[3]});
+    texel = get_tex_coords(atlas.drummer,atlas.w,atlas.h);
+    for(const auto& drummer:b.drums){
+        retMe.push_back({{x0+drummer.x+dX, y0+drummer.y+dY, depth}, color, texel[0]});
+        retMe.push_back({{x1+drummer.x+dX, y0+drummer.y+dY, depth}, color, texel[1]});
+        retMe.push_back({{x1+drummer.x+dX, y1+drummer.y+dY, depth}, color, texel[2]});
+        retMe.push_back({{x0+drummer.x+dX, y1+drummer.y+dY, depth}, color, texel[3]});
+    }
+    
+    texel = get_tex_coords(atlas.notes,atlas.w,atlas.h);
+    for(const auto& notes:b.notes){
+        retMe.push_back({{x0+notes.x+dX, y0+notes.y+dY, depth}, color, texel[0]});
+        retMe.push_back({{x1+notes.x+dX, y0+notes.y+dY, depth}, color, texel[1]});
+        retMe.push_back({{x1+notes.x+dX, y1+notes.y+dY, depth}, color, texel[2]});
+        retMe.push_back({{x0+notes.x+dX, y1+notes.y+dY, depth}, color, texel[3]});
+    }
+    
+    texel = get_tex_coords(atlas.drummer,atlas.w,atlas.h);
+    for(const auto& demon:b.demons){
+        retMe.push_back({{x0+demon.x+dX, y0+demon.y+dY, depth}, color, texel[0]});
+        retMe.push_back({{x1+demon.x+dX, y0+demon.y+dY, depth}, color, texel[1]});
+        retMe.push_back({{x1+demon.x+dX, y1+demon.y+dY, depth}, color, texel[2]});
+        retMe.push_back({{x0+demon.x+dX, y1+demon.y+dY, depth}, color, texel[3]});
+    }
+    
+    texel = get_tex_coords(atlas.drummer,atlas.w,atlas.h);
+    for(const auto& fireball:b.fireballs){
+        retMe.push_back({{x0+fireball.x+dX, y0+fireball.y+dY, depth}, color, texel[0]});
+        retMe.push_back({{x1+fireball.x+dX, y0+fireball.y+dY, depth}, color, texel[1]});
+        retMe.push_back({{x1+fireball.x+dX, y1+fireball.y+dY, depth}, color, texel[2]});
+        retMe.push_back({{x0+fireball.x+dX, y1+fireball.y+dY, depth}, color, texel[3]});
+    }
     
     return retMe;
 }

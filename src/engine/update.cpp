@@ -14,6 +14,7 @@ constexpr int max_BPM = 120;
 int sub_beat = 3;// 16th notes, 3 means we start off on a full beat.
 
 std::chrono::time_point<std::chrono::system_clock> last_beat;
+std::chrono::time_point<std::chrono::system_clock> last_pulse;
 
 board b;
 
@@ -22,12 +23,11 @@ mouse_t mouse;
 
 bool pause_request = false;
 bool unpause_request = false;
-bool paused = true;
+bool paused = false;
 
 std::chrono::time_point<std::chrono::system_clock> pause_time;
 
 void update(double timeStep){
-    play_sound("res/audio/metronome-85688.mp3");
     std::chrono::time_point<std::chrono::system_clock> now = std::chrono::system_clock::now();
     
     if(pause_request){
@@ -56,50 +56,68 @@ void update(double timeStep){
     
     static uint8_t movement = 0;
     
-    movement |= up.isActive()*1;
-    movement |= left.isActive()*2;
-    movement |= down.isActive()*4;
-    movement |= right.isActive()*8;
+    std::chrono::duration<float> time_since_last_pulse = now - last_pulse;// (we are tracking 16th notes.
+    
+    if(time_since_last_pulse>std::chrono::duration<float>(7.5f/BPM)){// we ingore inputs for the first half of a 16 note. This is actually so the game feels more responsive.
+        movement |= up.isActive()*1;
+        movement |= left.isActive()*2;
+        movement |= down.isActive()*4;
+        movement |= right.isActive()*8;
+    }
     
     if(duration>full_beat&&sub_beat==3){
         last_beat = now;
+        last_pulse = now;
+        
         b.step(4,movement);
         
         movement = 0;
         
         sub_beat = 4;
         
-        play_sound("res/audio/metronome-85688.mp3");
+        play_sound("metronome");
         
         return;
     }
     
     if(duration>three_quarter_beat&&sub_beat==2){
+        last_pulse = now;
+        
         b.step(3,movement);
         
         movement = 0;
         
         sub_beat = 3;
         
+        play_sound("metronome",.1);
+        
         return;
     }
     
     if(duration>half_beat&&sub_beat==1){
+        last_pulse = now;
+        
         b.step(2,movement);
         
         movement = 0;
         
         sub_beat = 2;
         
+        play_sound("metronome",.2);
+        
         return;
     }
     
     if(duration>quarter_beat&&sub_beat==4){
+        last_pulse = now;
+        
         b.step(1,movement);
         
         movement = 0;
         
         sub_beat = 1;
+        
+        play_sound("metronome",.1);
         
         return;
     }

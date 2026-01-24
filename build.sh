@@ -18,9 +18,9 @@ Source_Files=(
     "graphics/imgui/imgui_impl_sdl3.cpp" "graphics/imgui/imgui_impl_vulkan.cpp"
     "graphics/vulkan/shader.cpp" "graphics/vulkan/vulkan.cpp"
     
-    "util/xml/Markup.cpp" "util/file/file.cpp" "util/stb/stb_image.cpp"
+    "util/xml/Markup.cpp" "util/file/file.cpp" "util/stb/stb_image.cpp" "util/tinywav/tinywav.cpp"
     
-    "game/beat-dungeon.cpp"
+    "game/beat-dungeon.cpp" "game/level-editor.cpp"
 )
 
 Object_Files=()
