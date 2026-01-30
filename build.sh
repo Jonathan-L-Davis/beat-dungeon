@@ -25,6 +25,40 @@ Source_Files=(
 
 Object_Files=()
 
+OS="lin"
+
+while test $# -gt 0; do
+    case $1 in
+        "--OS")
+            OS="$2";
+            shift 2;
+        ;;
+    esac
+done
+
+if [[ $OS != "lin" && $OS != "win" ]]; then
+    echo "Provided invalid OS option: '${OS}'"
+    echo "Valid options:"
+    echo "    lin"
+    echo "    win"
+    exit -1
+fi
+
+if [[ $OS == "lin" ]]; then
+    TRIPLE=""
+    RPATH="-Wl,-rpath=\"\\\$ORIGIN\""
+    COMPILER="zig c++"
+    SYSTEM_INCLUDES="-I/usr/include"
+fi
+
+if [[ $OS == "win" ]]; then
+    TRIPLE=""
+    #TRIPLE="-target x86_64-windows-gnu"
+    RPATH=""
+    COMPILER="zig c++"
+    #COMPILER="x86_64-w64-mingw32-gcc"
+fi
+
 mkdir -p obj
 for file in "${Source_Files[@]}" ; do
     
@@ -33,27 +67,27 @@ for file in "${Source_Files[@]}" ; do
         exit 1
     fi
     
-    object_file="obj/src/$(echo $file | sed -e 's/\.cpp/\.o/')"
+    object_file="obj/${OS}/src/$(echo $file | sed -e 's/\.cpp/\.o/')"
     file="src/$file"
     
     path="$(dirname $file)"
     Object_Files+=( "${object_file}" )
-    mkdir -p "obj/$path" # otherwise clang++/g++ complain about non-existing directory
-    zig c++ "$file" -g -o "${object_file}" -std=c++23 -O0 -c -Isrc -I/usr/include
+    mkdir -p "obj/$OS/$path" # otherwise clang++/g++ complain about non-existing directory
+    $COMPILER $TARGET "$file" -g -o "${object_file}" -std=c++23 -O0 -c -Isrc $SYSTEM_INCLUDES
 done
 
 for object in "${Object_Files[@]}" ; do
     file_glob+=" $object"
 done
 
-mkdir -p gen
-zig c++ $file_glob -o "gen/${Executable}" -Wl,-rpath="\$ORIGIN" -L/usr/local/lib -lSDL3 -lX11 -lvulkan -fsanitize=address
+mkdir -p gen/$OS
+$COMPILER $TARGET $file_glob -o "gen/${OS}/${Executable}"  -L/usr/local/lib -lSDL3 -lX11 -lvulkan
 
 mkdir -p res/shaders
 glslc src/shader/vertex/shader.vert -o res/shaders/vert.spv
 glslc src/shader/fragment/shader.frag -o res/shaders/frag.spv
 
-cp -r res gen
-cp config.xml gen
+cp -r res gen/$OS
+cp config.xml gen/$OS
 
-cp -r levels gen/
+cp -r levels gen/$OS/

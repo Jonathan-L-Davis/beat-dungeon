@@ -8,8 +8,11 @@
 
 #include "audio/audio.h"
 
-constexpr uint32_t version = 0;
+constexpr uint32_t format_version = 1;
 constexpr int sax_cooldown = 2;
+constexpr int sax_range = 4;
+constexpr int demon_cooldown = 2;
+constexpr int demon_range = 6;
 
 std::string to_str(tile_t strMe){
     switch(strMe){
@@ -25,6 +28,24 @@ std::string to_str(tile_t strMe){
     }
 }
 
+bool tile_is_door(tile_t a){
+    return a==tile_t::door_open||a==tile_t::door_closed;
+}
+
+bool tile_is_firepit(tile_t a){
+    return a==tile_t::firepit_on||a==tile_t::firepit_off;
+}
+
+bool tile_kinds_match(tile_t a,tile_t b){
+    if(a==b) return true;
+    
+    if(tile_is_door(a)&&tile_is_door(b)) return true;
+    
+    if(tile_is_firepit(a)&&tile_is_firepit(b)) return true;
+    
+    return false;
+}
+
 bool board::load_level(std::string file_name){
     
     player = player_t();
@@ -35,9 +56,14 @@ bool board::load_level(std::string file_name){
     
     if(file.size()==0) return false;
     
+    int idx = 0;
+    uint32_t file_version;
+    read_from_buffer(file,idx,file_version);
+    assert(file_version < 2 && "Oh no! You tried to load a file with version greater than exists!");
+    
     uint32_t x,y;
-    read_from_buffer(file,4,x);
-    read_from_buffer(file,8,y);
+    read_from_buffer(file,idx,x);
+    read_from_buffer(file,idx,y);
     
     assert(x<=32&&"Board is larger than expected.");
     assert(y<=32&&"Board is larger than expected.");
@@ -46,40 +72,69 @@ bool board::load_level(std::string file_name){
     for(int i = 0; i < data.size(); i++)
         data[i].resize(y);
     
-    int idx = 12;
     for(int i = 0; i < data.size(); i++){
         for(int j = 0; j < data[i].size(); j++){
-            read_from_buffer( file, idx, *(uint8_t*)&data[i][j].type);idx++;
+            read_from_buffer( file, idx, *(uint8_t*)&data[i][j].type);
             switch(data[i][j].type){
-            case tile_t::pit: data[i][j].cell_data = new pit_t{}; break;
-            case tile_t::firepit_on: data[i][j].cell_data = new firepit_t{}; break;
-            case tile_t::firepit_off: data[i][j].cell_data = new firepit_t{}; break;
-            case tile_t::floor: data[i][j].cell_data = new floor_t{}; break;
-            case tile_t::exit: data[i][j].cell_data = new exit_t{}; break;
-            case tile_t::plate:{
-                data[i][j].cell_data = new plate_t{};
-                plate_t& plate = *((plate_t*)data[i][j].cell_data);
-                idx+=2;// skipping over the xy coords for now. They'll be eliminated soon.
-                read_from_buffer(file, idx, plate.ticks_alive);idx++;
-                read_from_buffer(file, idx, plate.max_ticks);idx++;
-            }break;
-            case tile_t::wall:{
-                data[i][j].cell_data = new wall_t{};
-                //wall_t& wall = *((wall_t*)data[i][j].cell_data);
-                //read_from_buffer(file, idx, wall.character);idx++;
-            }break;
-            case tile_t::door_closed:
-            case tile_t::door_open:{
-                data[i][j].cell_data = new door_t{};
-                //wall_t& wall = *((wall_t*)data[i][j].cell_data);
-                //read_from_buffer(file, idx, wall.character);idx++;
-            }break;
+                case tile_t::pit:{
+                    data[i][j].cell_data = new pit_t{};
+                    pit_t& pit = *((pit_t*)data[i][j].cell_data);
+                    if(file_version==1){
+                        read_from_buffer(file, idx, pit.character);
+                    }
+                }break;
+                case tile_t::firepit_on:
+                case tile_t::firepit_off:{
+                    data[i][j].cell_data = new firepit_t{};
+                    firepit_t& firepit = *((firepit_t*)data[i][j].cell_data);
+                    if(file_version==1){
+                        read_from_buffer(file, idx, firepit.variation);
+                    }
+                }break;
+                case tile_t::floor:{
+                    data[i][j].cell_data = new floor_t{};
+                    floor_t& floor = *((floor_t*)data[i][j].cell_data);
+                    if(file_version==1){
+                        read_from_buffer(file, idx, floor.variation);
+                    }
+                }break;
+                case tile_t::exit:{
+                    data[i][j].cell_data = new exit_t{};
+                    exit_t& exit = *((exit_t*)data[i][j].cell_data);
+                    if(file_version==1){
+                        read_from_buffer(file, idx, exit.variation);
+                    }
+                }break;
+                case tile_t::plate:{
+                    data[i][j].cell_data = new plate_t{};
+                    plate_t& plate = *((plate_t*)data[i][j].cell_data);
+                    if(file_version==0)idx+=2;// skipping over the xy coords now. They no longer exist.
+                    if(file_version==1){ read_from_buffer(file, idx, plate.character); }
+                    read_from_buffer(file, idx, plate.ticks_alive);
+                    read_from_buffer(file, idx, plate.max_ticks);
+                }break;
+                case tile_t::wall:{
+                    data[i][j].cell_data = new wall_t{};
+                    wall_t wall = *((wall_t*)data[i][j].cell_data);
+                    if(file_version==1){
+                        read_from_buffer(file, idx, wall.character);
+                        read_from_buffer(file, idx, wall.variation);
+                    }
+                }break;
+                case tile_t::door_closed:
+                case tile_t::door_open:{
+                    data[i][j].cell_data = new door_t{};
+                    door_t& door = *((door_t*)data[i][j].cell_data);
+                    if(file_version==1){
+                        read_from_buffer(file, idx, door.character);
+                    }
+                }break;
             }
         }
     }
     
-    read_from_buffer(file, idx, player.x);idx+=4;
-    read_from_buffer(file, idx, player.y);idx+=4;
+    read_from_buffer(file, idx, player.x);
+    read_from_buffer(file, idx, player.y);
     
     saxophones = {};
     drums      = {};
@@ -87,9 +142,35 @@ bool board::load_level(std::string file_name){
     demons     = {};
     fireballs  = {};
     
-    
-    
     update_wall_borders();
+    
+    if(file_version==0) return true;
+    
+    // load saxophones
+    uint32_t num_saxophones = 0;
+    read_from_buffer(file, idx, num_saxophones);
+    for(int i = 0; i < num_saxophones; i++){
+        sax_t new_sax;
+        read_from_buffer(file,idx,new_sax.x);
+        read_from_buffer(file,idx,new_sax.y);
+        read_from_buffer(file,idx,new_sax.movement);
+        read_from_buffer(file,idx,new_sax.shot_cooldown);
+        saxophones.push_back(new_sax);
+    }
+    
+    // load notes
+    uint32_t num_notes = 0;
+    read_from_buffer(file, idx, num_notes);
+    for(int i = 0; i < num_notes; i++){
+        notes_t new_notes;
+        read_from_buffer(file,idx,new_notes.x);
+        read_from_buffer(file,idx,new_notes.y);
+        read_from_buffer(file,idx,new_notes.movement);
+        notes.push_back(new_notes);
+    }
+    // load drums
+    // load demons,
+    // load fireballs,
     
     return true;
 }
@@ -100,7 +181,7 @@ bool board::save_level(std::string file_name){
     level = file_name;
     
     std::vector<uint8_t> file;
-    append_to_buffer(file,version);
+    append_to_buffer(file,format_version);
     
     if(data.size()==0) return false;
     if(data[0].size()==0) return false;
@@ -122,18 +203,65 @@ bool board::save_level(std::string file_name){
             cell_t& c = data[i][j];
             
             append_to_buffer(file,(uint8_t)c.type);
-            
-            if(c.type==tile_t::plate){
-                plate_t& plate = *((plate_t*)c.cell_data);
-                append_to_buffer(file, (uint8_t)plate.character);
-                append_to_buffer(file, (uint8_t)plate.ticks_alive);
-                append_to_buffer(file, (uint8_t)plate.max_ticks);
+            switch(c.type){
+                case tile_t::pit:{
+                    pit_t& pit = *((pit_t*)c.cell_data);
+                    append_to_buffer(file, (uint8_t)pit.character);
+                }break;
+                case tile_t::firepit_on:
+                case tile_t::firepit_off:{
+                    firepit_t& firepit = *((firepit_t*)c.cell_data);
+                    append_to_buffer(file, (uint8_t)firepit.variation);
+                }break;
+                case tile_t::floor:{
+                    floor_t& floor = *((floor_t*)c.cell_data);
+                    append_to_buffer(file, (uint8_t)floor.variation);
+                }break;
+                case tile_t::exit:{
+                    exit_t& exit = *((exit_t*)c.cell_data);
+                    append_to_buffer(file, (uint8_t)exit.variation);
+                }break;
+                case tile_t::plate:{
+                    plate_t& plate = *((plate_t*)c.cell_data);
+                    append_to_buffer(file, (uint8_t)plate.character);
+                    append_to_buffer(file, (uint8_t)plate.ticks_alive);
+                    append_to_buffer(file, (uint8_t)plate.max_ticks);
+                }break;
+                case tile_t::wall:{
+                    wall_t& wall = *((wall_t*)c.cell_data);
+                    append_to_buffer(file, (uint8_t)wall.character);
+                    append_to_buffer(file, (uint8_t)wall.variation);// may not be used, but doesn't hurt to store. ( probably for a subtle cracking texture.
+                }break;
+                case tile_t::door_closed:
+                case tile_t::door_open:{
+                    door_t& door = *((door_t*)c.cell_data);
+                    append_to_buffer(file, (uint8_t)door.character);
+                }break;
             }
         }
     }
     
     append_to_buffer(file,player.x);
     append_to_buffer(file,player.y);
+    
+    // save saxophones
+    uint32_t num_saxophones = saxophones.size();
+    append_to_buffer(file, num_saxophones);
+    for(const sax_t& old_sax: saxophones){
+        append_to_buffer(file,old_sax.x);
+        append_to_buffer(file,old_sax.y);
+        append_to_buffer(file,old_sax.movement);
+        append_to_buffer(file,old_sax.shot_cooldown);
+    }
+    
+    // save notes
+    uint32_t num_notes = notes.size();
+    append_to_buffer(file, num_notes);
+    for(const notes_t old_notes: notes){
+        append_to_buffer(file,old_notes.x);
+        append_to_buffer(file,old_notes.y);
+        append_to_buffer(file,old_notes.movement);
+    }
     
     return save_file(file_name,file);
 }
@@ -142,9 +270,38 @@ void board::resize(int x, int y){
     
     for(int i = 0; i < data.size(); i++){
         for(int j = 0; j < data[0].size(); j++){
-            if( (i>=x || j>=y) && data[i][j].type == tile_t::plate ){
-                delete (plate_t*) data[i][j].cell_data;
-                data[i][j].cell_data = nullptr;
+            if( (i>=x || j>=y) )
+            switch(data[i][j].type){
+                case tile_t::plate:
+                    delete (plate_t*) data[i][j].cell_data;
+                    data[i][j].cell_data = nullptr;
+                break;
+                case tile_t::door_open:
+                case tile_t::door_closed:
+                    delete (door_t*) data[i][j].cell_data;
+                    data[i][j].cell_data = nullptr;
+                break;
+                case tile_t::firepit_on:
+                case tile_t::firepit_off:
+                    delete (plate_t*) data[i][j].cell_data;
+                    data[i][j].cell_data = nullptr;
+                break;
+                case tile_t::wall:
+                    delete (wall_t*) data[i][j].cell_data;
+                    data[i][j].cell_data = nullptr;
+                break;
+                case tile_t::exit:
+                    delete (exit_t*) data[i][j].cell_data;
+                    data[i][j].cell_data = nullptr;
+                break;
+                case tile_t::pit:
+                    delete (pit_t*) data[i][j].cell_data;
+                    data[i][j].cell_data = nullptr;
+                break;
+                case tile_t::floor:
+                    delete (floor_t*) data[i][j].cell_data;
+                    data[i][j].cell_data = nullptr;
+                break;
             }
         }
     }
@@ -160,8 +317,8 @@ void board::resize(int x, int y){
     for(int i = 0; i < data.size(); i++){
         for(int j = 0; j < data[0].size(); j++){
             if( (i>=old_x || j>=old_y) ){
-                data[i][j].cell_data = nullptr;
-                data[i][j].type = tile_t::floor;
+                data[i][j].cell_data = new pit_t{};
+                data[i][j].type = tile_t::pit;
             }
         }
     }
@@ -226,7 +383,9 @@ void board::step(int beat, uint8_t movement){
     
     step_plates(beat);
     step_notes(beat);
+    step_fireball(beat);
     step_saxophone(beat);
+    step_demons(beat);
     step_player(beat,movement);
 }
 
@@ -435,7 +594,7 @@ void board::step_saxophone(int beat){
             }
         }
         
-        bool shoot = (distance>-1&&distance<=4&&sax.shot_cooldown==0);
+        bool shoot = (distance>-1&&distance<=sax_range&&sax.shot_cooldown==0);
         
         for(const auto& note:notes){
             if(sax.x==note.x&&sax.y==note.y)
@@ -510,6 +669,128 @@ void board::step_saxophone(int beat){
     }
 }
 
+void board::step_demons(int beat){
+    
+    if(data.size()==0) return;
+    if(data[0].size()==0) return;
+    
+    for(demon_t& demon:demons){
+        
+        if(demon.shot_cooldown>0) demon.shot_cooldown--;
+        
+        int distance = -1;
+        
+        for(uint32_t y = demon.y; y < data.size()&&is_visible(demon.x,y);y--){
+            if( player.x == demon.x && player.y == y && demon.shot_cooldown==0 ){
+                demon.movement = 1;
+                distance = demon.y-y;
+                break;
+            }
+        }
+        
+        for(uint32_t x = demon.x; x < data.size()&&is_visible(x,demon.y);x--){
+            if( player.x == x && player.y == demon.y && demon.shot_cooldown==0 ){
+                demon.movement = 2;
+                distance = demon.x-x;
+                break;
+            }
+        }
+        
+        for(uint32_t y = demon.y; y < data.size()&&is_visible(demon.x,y);y++){
+            if( player.x == demon.x && player.y == y && demon.shot_cooldown==0 ){
+                demon.movement = 4;
+                distance = y-demon.y;
+                break;
+            }
+        }
+        
+        for(uint32_t x = demon.x; x < data.size()&&is_visible(x,demon.y);x++){
+            if( player.x == x && player.y == demon.y && demon.shot_cooldown==0 ){
+                demon.movement = 8;
+                distance = x-demon.x;
+                break;
+            }
+        }
+        
+        bool shoot = (distance>-1&&distance<=demon_range&&demon.shot_cooldown==0);
+        
+        for(const auto& note:notes){
+            if(demon.x==note.x&&demon.y==note.y)
+                shoot = true;
+        }
+        
+        uint8_t movement = demon.movement;
+        uint32_t new_x = demon.x, new_y = demon.y;
+        bool move_up    =  (movement&1)&&!(movement&2)&&!(movement&4)&&!(movement&8);
+        bool move_left  = !(movement&1)&& (movement&2)&&!(movement&4)&&!(movement&8);
+        bool move_down  = !(movement&1)&&!(movement&2)&& (movement&4)&&!(movement&8);
+        bool move_right = !(movement&1)&&!(movement&2)&&!(movement&4)&& (movement&8);
+        
+        if(move_up){
+            new_y -= 1;
+        }
+        
+        if(move_left){
+            new_x -= 1;
+        }
+        
+        if(move_down){
+            new_y += 1;
+        }
+        
+        if(move_right){
+            new_x += 1;
+        }
+        
+        if(shoot){
+            // making the assumption that new pos is valid for notes to spawn in on.
+            fireball_t new_fireball;
+            new_fireball.x = new_x;
+            new_fireball.y = new_y;
+            new_fireball.movement = demon.movement;
+            // these 2 lines switch it's direction. Don't worry about it too much.
+            //demon.movement |= (demon.movement<<4);
+            //demon.movement >>= 2;
+            
+            new_x = demon.x;
+            new_y = demon.y;
+            
+            demon.shot_cooldown = demon_cooldown;
+            if(data[new_fireball.x][new_fireball.y].type==tile_t::firepit_off){
+                data[new_fireball.x][new_fireball.y].type = tile_t::firepit_on;
+                continue;
+            }
+            fireballs.push_back(new_fireball);
+        }
+        
+        if(!is_walkable(new_x,new_y)){
+            // these 2 lines switch it's direction. Don't worry about it too much.
+            demon.movement |= (demon.movement<<4);
+            demon.movement >>= 2;
+            continue;
+        }
+        
+        for(uint32_t y = demon.y; y < data.size()&&is_visible(demon.x,y);y--)
+            if( player.x == demon.x && player.y == y && demon.shot_cooldown==0 )
+                demon.movement = 1;
+        
+        for(uint32_t x = demon.x; x < data.size()&&is_visible(x,demon.y);x--)
+            if( player.x == x && player.y == demon.y && demon.shot_cooldown==0 )
+                demon.movement = 2;
+        
+        for(uint32_t y = demon.y; y < data.size()&&is_visible(demon.x,y);y++)
+            if( player.x == demon.x && player.y == y && demon.shot_cooldown==0 )
+                demon.movement = 4;
+        
+        for(uint32_t x = demon.x; x < data.size()&&is_visible(x,demon.y);x++)
+            if( player.x == x && player.y == demon.y && demon.shot_cooldown==0 )
+                demon.movement = 8;
+        
+        demon.x = new_x;
+        demon.y = new_y;
+    }
+}
+
 void board::step_notes(int beat){
     
     if(data.size()==0) return;
@@ -570,6 +851,66 @@ void board::step_notes(int beat){
     }
 }
 
+void board::step_fireball(int beat){
+    
+    if(data.size()==0) return;
+    if(data[0].size()==0) return;
+    
+    for(fireball_t& fireball:fireballs){
+        uint8_t movement = fireball.movement;
+        uint32_t new_x = fireball.x, new_y = fireball.y;
+        bool move_up    =  (movement&1)&&!(movement&2)&&!(movement&4)&&!(movement&8);
+        bool move_left  = !(movement&1)&& (movement&2)&&!(movement&4)&&!(movement&8);
+        bool move_down  = !(movement&1)&&!(movement&2)&& (movement&4)&&!(movement&8);
+        bool move_right = !(movement&1)&&!(movement&2)&&!(movement&4)&& (movement&8);
+        
+        if(move_up){
+            new_y -= 1;
+        }
+        
+        if(move_left){
+            new_x -= 1;
+        }
+        
+        if(move_down){
+            new_y += 1;
+        }
+        
+        if(move_right){
+            new_x += 1;
+        }
+        
+        if(!is_visible(new_x,new_y)){
+            fireball.movement = 0;// non moving notes are marked for death & removed.
+            continue;
+        }
+        
+        fireball.x = new_x;
+        fireball.y = new_y;
+        
+    }
+    
+    for(int i = fireballs.size()-1; i >= 0; i--){
+        fireball_t& fireball = fireballs[i];
+        
+        if(data[fireball.x][fireball.y].type==tile_t::firepit_off){
+            fireball.movement = 0;// broken into 2 loops to catch all notes that move on a flame in the same turn.
+        }
+    }
+    
+    for(int i = fireballs.size()-1; i >= 0; i--){
+        fireball_t& fireball = fireballs[i];
+        
+        if(data[fireball.x][fireball.y].type==tile_t::firepit_off){
+            data[fireball.x][fireball.y].type = tile_t::firepit_on;
+        }
+        
+        if(fireball.movement==0)
+            fireballs.erase(fireballs.begin()+i);
+        
+    }
+}
+
 void board::update_wall_borders(){
     for(int x = 0; x < data.size(); x++){
         for(int y = 0; y < data[x].size(); y++){
@@ -591,6 +932,8 @@ void board::update_wall_borders(){
         }
     }
 }
+
+
 
 std::array<glm::vec2,4> get_tex_coords(init_data_t::rect R, float w, float h){
     std::array<glm::vec2,4> retMe;
@@ -635,7 +978,7 @@ std::vector<graphics::vulkan::Vertex> draw_board(board b, float aspect_ratio){
             bool skip = false;
             switch(b.data[x][y].type){
                 case tile_t::wall       : break;
-                case tile_t::floor      : texel = get_tex_coords(atlas.floor,atlas.w,atlas.h);       break;
+                case tile_t::floor      : texel = get_tex_coords(atlas.floor[(*(floor_t*)b.data[x][y].cell_data).variation],atlas.w,atlas.h);       break;
                 case tile_t::plate      : texel = get_tex_coords(atlas.plate,atlas.w,atlas.h);       break;
                 case tile_t::firepit_on : texel = get_tex_coords(atlas.fire,atlas.w,atlas.h);        break;
                 case tile_t::firepit_off: texel = get_tex_coords(atlas.fire_out,atlas.w,atlas.h);    break;
@@ -715,6 +1058,23 @@ std::vector<graphics::vulkan::Vertex> draw_board(board b, float aspect_ratio){
                 retMe.push_back({{x1+x+dX-.5, y1+y+dY, depth}, color, texel[2]});
                 retMe.push_back({{x0+x+dX, y1+y+dY, depth}, color, texel[3]});//*/
             }else{
+                bool draw_floor = false;
+                uint8_t floor_variation = 0;
+                switch(b.data[x][y].type){
+                    case tile_t::firepit_on  : floor_variation = (*(firepit_t*)b.data[x][y].cell_data).variation; draw_floor = true; break;
+                    case tile_t::firepit_off : floor_variation = (*(firepit_t*)b.data[x][y].cell_data).variation; draw_floor = true; break;
+                    case tile_t::exit        : floor_variation = (*(exit_t   *)b.data[x][y].cell_data).variation; draw_floor = true; break;
+                    default: break;
+                }
+                
+                if(draw_floor){
+                    std::array<glm::vec2,4> floor_texel = get_tex_coords(atlas.floor[floor_variation&3],atlas.w,atlas.h);
+                    retMe.push_back({{x0+x+dX, y0+y+dY, depth}, color, floor_texel[0]});
+                    retMe.push_back({{x1+x+dX, y0+y+dY, depth}, color, floor_texel[1]});
+                    retMe.push_back({{x1+x+dX, y1+y+dY, depth}, color, floor_texel[2]});
+                    retMe.push_back({{x0+x+dX, y1+y+dY, depth}, color, floor_texel[3]});
+                }
+                
                 retMe.push_back({{x0+x+dX, y0+y+dY, depth}, color, texel[0]});
                 retMe.push_back({{x1+x+dX, y0+y+dY, depth}, color, texel[1]});
                 retMe.push_back({{x1+x+dX, y1+y+dY, depth}, color, texel[2]});
@@ -755,7 +1115,7 @@ std::vector<graphics::vulkan::Vertex> draw_board(board b, float aspect_ratio){
         retMe.push_back({{x0+notes.x+dX, y1+notes.y+dY, depth}, color, texel[3]});
     }
     
-    texel = get_tex_coords(atlas.drummer,atlas.w,atlas.h);
+    texel = get_tex_coords(atlas.demon,atlas.w,atlas.h);
     for(const auto& demon:b.demons){
         retMe.push_back({{x0+demon.x+dX, y0+demon.y+dY, depth}, color, texel[0]});
         retMe.push_back({{x1+demon.x+dX, y0+demon.y+dY, depth}, color, texel[1]});
@@ -763,7 +1123,7 @@ std::vector<graphics::vulkan::Vertex> draw_board(board b, float aspect_ratio){
         retMe.push_back({{x0+demon.x+dX, y1+demon.y+dY, depth}, color, texel[3]});
     }
     
-    texel = get_tex_coords(atlas.drummer,atlas.w,atlas.h);
+    texel = get_tex_coords(atlas.fireball,atlas.w,atlas.h);
     for(const auto& fireball:b.fireballs){
         retMe.push_back({{x0+fireball.x+dX, y0+fireball.y+dY, depth}, color, texel[0]});
         retMe.push_back({{x1+fireball.x+dX, y0+fireball.y+dY, depth}, color, texel[1]});

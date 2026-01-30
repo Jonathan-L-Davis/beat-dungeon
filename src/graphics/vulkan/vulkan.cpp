@@ -232,9 +232,12 @@ namespace graphics{
             ImGuiIO& io = ImGui::GetIO(); (void)io;
             io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;     // Enable Keyboard Controls
             io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;      // Enable Gamepad Controls
+            io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;      // Enable Gamepad Controls
+            io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;      // Enable Gamepad Controls
             
             // Setup Dear ImGui style
             ImGui::StyleColorsDark();
+            //ImGui::StyleColorsClassic();
             //ImGui::StyleColorsLight();
             
             // Setup scaling
@@ -349,11 +352,14 @@ namespace graphics{
             ImGui_ImplVulkan_NewFrame();
             ImGui_ImplSDL3_NewFrame();
             ImGui::NewFrame();
+            ImGui::DockSpaceOverViewport(0,NULL,ImGuiDockNodeFlags_PassthruCentralNode);
         }
         
         void end_frame(){
             
             ImGui::Render();
+            ImGui::UpdatePlatformWindows();
+            ImGui::RenderPlatformWindowsDefault();
             
             vkWaitForFences(LogicalDevice, 1, &inFlightFences[currentFrame], VK_TRUE, UINT64_MAX);
             

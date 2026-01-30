@@ -14,9 +14,9 @@ void append_to_buffer(std::vector<uint8_t>& file, uint16_t x);
 void append_to_buffer(std::vector<uint8_t>& file, uint32_t x);
 void append_to_buffer(std::vector<uint8_t>& file, uint64_t x);
 
-void read_from_buffer(std::vector<uint8_t> file, int i, uint8_t& x);
-void read_from_buffer(std::vector<uint8_t> file, int i, uint16_t& x);
-void read_from_buffer(std::vector<uint8_t> file, int i, uint32_t& x);
-void read_from_buffer(std::vector<uint8_t> file, int i, uint64_t& x);
+void read_from_buffer(std::vector<uint8_t> file, int& i, uint8_t& x);
+void read_from_buffer(std::vector<uint8_t> file, int& i, uint16_t& x);
+void read_from_buffer(std::vector<uint8_t> file, int& i, uint32_t& x);
+void read_from_buffer(std::vector<uint8_t> file, int& i, uint64_t& x);
 
 #endif//FILE_H

@@ -2,18 +2,19 @@
 #include "graphics/graphics.h"
 // floor types
 enum struct tile_t: uint8_t {
-    pit   = 0,
-    floor = 1,
-    wall = 2,
-    plate = 3,// has a count down measured in measures
-    door_open = 4,
+    pit         = 0,
+    floor       = 1,
+    wall        = 2,
+    plate       = 3,// has a count down measured in measures
+    door_open   = 4,
     door_closed = 5,
-    firepit_on = 6,
+    firepit_on  = 6,
     firepit_off = 7,
-    exit = 8,
+    exit        = 8,
 };
 
 std::string to_str(tile_t strMe);
+bool tile_kinds_match(tile_t a,tile_t b);
 
 struct plate_t{
     uint8_t character;
@@ -52,19 +53,14 @@ struct cell_t{
     void* cell_data;
 };
 
-enum : uint64_t {
-    player,
-    drummer,// has a count down measured in measures
-    sax,
-    snake,// head or not tracked in entity_data
-    notes,// do damage, come from drummer & sax
+enum entity_t: uint64_t {
+    player   = 0,
+    sax      = 1,
+    notes    = 2,
+    drummer  = 3,
+    demon    = 4,
+    fireball = 5,
     
-};
-
-struct entity_t{
-    uint64_t type;
-    uint32_t x,y;
-    void* entity_data;
 };
 
 struct player_t{
@@ -100,16 +96,13 @@ struct notes_t{// attacks in a straight line
 struct demon_t{// attacks in a straight line
     uint32_t x,y;
     uint8_t movement;
+    uint8_t shot_cooldown;
 };
 
 struct fireball_t{// attacks in a straight line
     uint32_t x,y;
     uint8_t movement;
 };
-
-
-
-entity_t create_player();
 
 struct board{
     player_t player;
@@ -132,8 +125,10 @@ struct board{
     
     void step_player(int beat,uint8_t movement);
     void step_saxophone(int beat);
+    void step_demons(int beat);
     void step_plates(int beat);
     void step_notes(int beat);
+    void step_fireball(int beat);
     void step(int beat,uint8_t movement);
     
     void update_wall_borders();

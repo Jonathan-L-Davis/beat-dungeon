@@ -52,6 +52,238 @@ std::string level_selector(){
     return retMe;
 }
 
+void entity_manager(int X_block,int Y_block, bool &draw, bool &place_entities){
+    ImGui::Begin("Entity Manager");
+    
+    if(!place_entities&&ImGui::Button("Place Entites",{200,50})){
+        draw = false;
+        place_entities = true;
+    }else// the else prevents them both appearing on the frame of transition.
+    if( place_entities&&ImGui::Button("No Place Entites",{200,50})) place_entities = false;
+    
+    static bool place_player = false;
+    static bool place_sax = false;
+    static int sax_idx = 0;
+    static bool place_notes = false;
+    static int notes_idx = 0;
+    static bool place_demon = false;
+    static int demon_idx = 0;
+    static bool place_fireball = false;
+    static int fireball_idx = 0;
+    
+    if(place_player)ImGui::Text("Placing Player");
+    if(place_sax)ImGui::Text("Placing Saxophone");
+    if(place_notes)ImGui::Text("Placing Notes");
+    if(place_demon)ImGui::Text("Placing Demon");
+    if(place_fireball)ImGui::Text("Placing Fireball");
+    
+    if(place_entities&&X_block>=0&&X_block<b.data.size()&&Y_block>=0&&Y_block<b.data[0].size()){
+        if(place_player&&mouse.leftDown){
+            b.player.x = X_block;
+            b.player.y = Y_block;
+            place_player=false;
+        }
+        
+        if(place_sax&&mouse.leftDown){
+            sax_t new_sax{};
+            new_sax.x = X_block;
+            new_sax.y = Y_block;
+            b.saxophones.push_back(new_sax);
+            place_sax = false;
+        }
+        
+        if(place_notes&&mouse.leftDown){
+            notes_t new_notes{};
+            new_notes.x = X_block;
+            new_notes.y = Y_block;
+            b.notes.push_back(new_notes);
+            place_notes = false;
+        }
+        
+        if(place_demon&&mouse.leftDown){
+            demon_t new_demon{};
+            new_demon.x = X_block;
+            new_demon.y = Y_block;
+            b.demons.push_back(new_demon);
+            place_demon = false;
+        }
+        
+        if(place_fireball&&mouse.leftDown){
+            fireball_t new_fireball{};
+            new_fireball.x = X_block;
+            new_fireball.y = Y_block;
+            b.fireballs.push_back(new_fireball);
+            place_fireball = false;
+        }
+    }
+    
+    if(ImGui::Button("Place player")){
+        place_player = !place_player;
+        place_sax = false;
+        place_notes = false;
+        place_demon = false;
+        place_fireball = false;
+    }
+    
+    int num_saxophones = b.saxophones.size();
+    ImGui::Text("# Saxophones: %d", num_saxophones);
+    if(ImGui::Button("Place saxophone")){
+        place_player = false;
+        place_sax = !place_sax;
+        place_notes = false;
+        place_demon = false;
+        place_fireball = false;
+    }
+    
+    if(b.saxophones.size()&&ImGui::Button("Delete saxophone")){
+        b.saxophones.erase(b.saxophones.begin()+sax_idx);
+    }
+    
+    if(b.saxophones.size()>0){
+        sax_idx++;
+        ImGui::InputInt("Sax Index",&sax_idx,1,1);
+        sax_idx--;
+        if(sax_idx>=b.saxophones.size()) sax_idx = b.saxophones.size()-1;
+        if(sax_idx<0) sax_idx = 0;
+        
+        int sax_n = sax_idx+1;
+        ImGui::Text("Edit sax #%d",sax_n);
+        
+        sax_t& sax = b.saxophones[sax_idx];
+        int movement = sax.movement;
+        ImGui::InputInt("movement##sax",&movement,1,5);
+        movement %= 16;
+        sax.movement = movement;
+        
+        int pos_x = sax.x;
+        int pos_y = sax.y;
+        ImGui::InputInt("x position##sax",&pos_x,1,5);
+        ImGui::InputInt("y position##sax",&pos_y,1,5);
+        sax.x = pos_x;
+        sax.y = pos_y;
+        
+    }
+    
+    int num_notes = b.notes.size();
+    ImGui::Text("# Notes: %d", num_notes);
+    if(ImGui::Button("Place notes")){
+        place_player = false;
+        place_sax = false;
+        place_notes = !place_notes;
+        place_demon = false;
+        place_fireball = false;
+    }
+    
+    if(b.notes.size()&&ImGui::Button("Delete notes")){
+        b.notes.erase(b.notes.begin()+notes_idx);
+    }
+    
+    if(b.notes.size()>0){
+        notes_idx++;
+        ImGui::InputInt("Notes Index",&notes_idx,1,1);
+        notes_idx--;
+        if(notes_idx>=b.notes.size()) notes_idx = b.notes.size()-1;
+        if(notes_idx<0) notes_idx = 0;
+        
+        int notes_n = notes_idx+1;
+        ImGui::Text("Edit notes #%d",notes_n);
+        
+        notes_t& notes = b.notes[notes_idx];
+        int movement = notes.movement;
+        ImGui::InputInt("movement##notes",&movement,1,5);
+        movement %= 16;
+        notes.movement = movement;
+        
+        int pos_x = notes.x;
+        int pos_y = notes.y;
+        ImGui::InputInt("x position##notes",&pos_x,1,5);
+        ImGui::InputInt("y position##notes",&pos_y,1,5);
+        notes.x = pos_x;
+        notes.y = pos_y;
+        
+    }
+    
+    int num_demons = b.demons.size();
+    ImGui::Text("# Demons: %d", num_demons);
+    if(ImGui::Button("Place demon")){
+        place_player = false;
+        place_sax = false;
+        place_notes = false;
+        place_demon = !place_demon;
+        place_fireball = false;
+    }
+    
+    if(b.demons.size()&&ImGui::Button("Delete demon")){
+        b.demons.erase(b.demons.begin()+demon_idx);
+    }
+    
+    if(b.demons.size()>0){
+        demon_idx++;
+        ImGui::InputInt("Demon Index",&demon_idx,1,1);
+        demon_idx--;
+        if(demon_idx>=b.saxophones.size()) demon_idx = b.demons.size()-1;
+        if(demon_idx<0) demon_idx = 0;
+        
+        int demon_n = demon_idx+1;
+        ImGui::Text("Edit demon #%d",demon_n);
+        
+        demon_t& demon = b.demons[demon_idx];
+        int movement = demon.movement;
+        ImGui::InputInt("movement##demon",&movement,1,5);
+        movement %= 16;
+        demon.movement = movement;
+        
+        int pos_x = demon.x;
+        int pos_y = demon.y;
+        ImGui::InputInt("x position##demon",&pos_x,1,5);
+        ImGui::InputInt("y position##demon",&pos_y,1,5);
+        demon.x = pos_x;
+        demon.y = pos_y;
+        
+    }
+    
+    int num_fireballs = b.fireballs.size();
+    ImGui::Text("# Fireballs: %d", num_fireballs);
+    if(ImGui::Button("Place fireball")){
+        place_player = false;
+        place_sax = false;
+        place_notes = false;
+        place_demon = false;
+        place_fireball = !place_fireball;
+    }
+    
+    if(b.fireballs.size()&&ImGui::Button("Delete fireball")){
+        b.fireballs.erase(b.fireballs.begin()+fireball_idx);
+    }
+    
+    if(b.notes.size()>0){
+        fireball_idx++;
+        ImGui::InputInt("Fireball Index",&fireball_idx,1,1);
+        notes_idx--;
+        if(fireball_idx>=b.notes.size()) fireball_idx = b.fireballs.size()-1;
+        if(fireball_idx<0) fireball_idx = 0;
+        
+        int fireball_n = fireball_idx+1;
+        ImGui::Text("Edit fireball #%d",fireball_n);
+        
+        fireball_t& fireball = b.fireballs[fireball_idx];
+        int movement = fireball.movement;
+        ImGui::InputInt("movement##fireballs",&movement,1,5);
+        movement %= 16;
+        fireball.movement = movement;
+        
+        int pos_x = fireball.x;
+        int pos_y = fireball.y;
+        ImGui::InputInt("x position##fireballs",&pos_x,1,5);
+        ImGui::InputInt("y position##fireballs",&pos_y,1,5);
+        fireball.x = pos_x;
+        fireball.y = pos_y;
+        
+    }
+    
+    ImGui::End();
+}
+
 void level_editor(){
     
     
@@ -105,19 +337,16 @@ void level_editor(){
             }
         }
         
-        {
-        bool do_move = ImGui::Button("Move Player");
         
-        static int B_size[2] = {0,0};
-        ImGui::InputInt2("##B_size2",B_size);
-        
-        for(int i = 0; i < 2; i++)
-            if(B_size[i]<0) B_size[i] = 0;
-        if(B_size[0]>=b.data.size()) B_size[0] = 0;
-        if(B_size[1]>=b.data[0].size()) B_size[1] = 0;
-        
-        if(do_move){b.player.x = B_size[0];b.player.y = B_size[1];}
+        if(ImGui::Button("Clear board")){
+            auto X_size = b.data.size();
+            auto Y_size = X_size;
+            Y_size = 0;
+            if(X_size>0) Y_size = b.data[0].size();
+            b.resize(0,0);// initializes everything to pits.
+            b.resize(X_size,Y_size);
         }
+        
         
         float m_x = 2*(mouse.mouseX/width-.5f);
         float m_y = 2*(mouse.mouseY/height-.5f);
@@ -161,6 +390,8 @@ void level_editor(){
         
         static bool draw = false;
         static bool place_entities = false;
+        if(draw) ImGui::Text("Drawing level tiles.");
+        if(place_entities) ImGui::Text("Placing entities.");
         
         if(!draw&&ImGui::Button("Draw",{200,50})){
             draw = true;
@@ -172,25 +403,26 @@ void level_editor(){
         std::string selected_type = to_str(new_type);
         
         ImGui::Text("Selected tile type: %s", selected_type.c_str());
-        if(ImGui::Button("pit")) new_type = tile_t::pit;
-        if(ImGui::Button("floor")) new_type = tile_t::floor;
-        if(ImGui::Button("wall")) new_type = tile_t::wall;
-        if(ImGui::Button("plate")) new_type = tile_t::plate;
-        if(ImGui::Button("door_open")) new_type = tile_t::door_open;
-        if(ImGui::Button("door_closed")) new_type = tile_t::door_closed;
-        if(ImGui::Button("firepit_on")) new_type = tile_t::firepit_on;
-        if(ImGui::Button("firepit_off")) new_type = tile_t::firepit_off;
-        if(ImGui::Button("exit")) new_type = tile_t::exit;
+        if(ImGui::Button("pit",{100,25})) new_type = tile_t::pit;
+        if(ImGui::Button("floor",{100,25})) new_type = tile_t::floor;
+        if(ImGui::Button("wall",{100,25})) new_type = tile_t::wall;
+        if(ImGui::Button("plate",{100,25})) new_type = tile_t::plate;
+        if(ImGui::Button("door_open",{100,25})) new_type = tile_t::door_open;
+        if(ImGui::Button("door_closed",{100,25})) new_type = tile_t::door_closed;
+        if(ImGui::Button("firepit_on",{100,25})) new_type = tile_t::firepit_on;
+        if(ImGui::Button("firepit_off",{100,25})) new_type = tile_t::firepit_off;
+        if(ImGui::Button("exit",{100,25})) new_type = tile_t::exit;
         
         static bool edit_plate = false;
-        static int plate_x;
-        static int plate_y;
         static bool edit_door = false;
-        static int door_x;
-        static int door_y;
         static bool edit_wall = false;
-        static int wall_x;
-        static int wall_y;
+        static bool edit_firepit = false;
+        static bool edit_pit = false;
+        static bool edit_exit = false;
+        static bool edit_floor = false;
+        static int edit_x;
+        static int edit_y;
+        static tile_t expected_tile_type = tile_t::floor;
         
         if(draw&&X_block>=0&&X_block<b.data.size()&&Y_block>=0&&Y_block<b.data[0].size()){
             
@@ -260,24 +492,24 @@ void level_editor(){
             
             if(mouse.rightDown){
                 
+                edit_x = X_block;
+                edit_y = Y_block;
+                
                 edit_plate = b.data[X_block][Y_block].type==tile_t::plate;
                 edit_door = b.data[X_block][Y_block].type==tile_t::door_open||b.data[X_block][Y_block].type==tile_t::door_closed;
-                edit_wall  = b.data[X_block][Y_block].type==tile_t::wall;
+                edit_wall = b.data[X_block][Y_block].type==tile_t::wall;
+                edit_firepit = b.data[X_block][Y_block].type==tile_t::firepit_on||b.data[X_block][Y_block].type==tile_t::firepit_off;
+                edit_pit = b.data[X_block][Y_block].type==tile_t::pit;
+                edit_exit = b.data[X_block][Y_block].type==tile_t::exit;
+                edit_floor = b.data[X_block][Y_block].type==tile_t::floor;
                 
-                if(edit_plate){
-                    plate_x = X_block;
-                    plate_y = Y_block;
-                }
-                
-                if(edit_door){
-                    door_x = X_block;
-                    door_y = Y_block;
-                }
-                
-                if(edit_wall){
-                    wall_x = X_block;
-                    wall_y = Y_block;
-                }
+                if(edit_pit) expected_tile_type = tile_t::pit;
+                if(edit_floor) expected_tile_type = tile_t::floor;
+                if(edit_wall) expected_tile_type = tile_t::wall;
+                if(edit_firepit) expected_tile_type = tile_t::firepit_on;
+                if(edit_door) expected_tile_type = tile_t::door_closed;
+                if(edit_exit) expected_tile_type = tile_t::exit;
+                if(edit_plate) expected_tile_type = tile_t::plate;
                 
             }
             
@@ -286,66 +518,22 @@ void level_editor(){
         
     ImGui::End();
     
-    ImGui::Begin("Entity Manager");
+    entity_manager(X_block,Y_block,draw,place_entities);
     
-    if(!place_entities&&ImGui::Button("Place Entites",{200,50})){
-        draw = false;
-        place_entities = true;
-    }else// the else prevents them both appearing on the frame of transition.
-    if( place_entities&&ImGui::Button("No Place Entites",{200,50})) place_entities = false;
-    
-    int num_saxophones = b.saxophones.size();
-    ImGui::Text("Saxophones: %d", num_saxophones);
-    static bool place_sax = false;
-    static int sax_idx = 0;
-    ImGui::InputInt("Sax Index",&sax_idx,1,1);
-    if(sax_idx>=b.saxophones.size()) sax_idx = b.saxophones.size()-1;
-    if(sax_idx<0) sax_idx = 0;
-    if(ImGui::Button("Place saxophone")){
-        place_sax = true;
+    if(edit_x>=b.data.size()||edit_y>b.data[0].size()||!tile_kinds_match(b.data[edit_x][edit_y].type,expected_tile_type)){
+        edit_plate   = false;
+        edit_door    = false;
+        edit_wall    = false;
+        edit_firepit = false;
+        edit_pit     = false;
+        edit_floor   = false;
+        edit_exit    = false;
     }
-    if(b.saxophones.size()&&ImGui::Button("Delete saxophone")){
-        b.saxophones.erase(b.saxophones.begin()+sax_idx);
-    }
-    
-    if(place_entities&&X_block>=0&&X_block<b.data.size()&&Y_block>=0&&Y_block<b.data[0].size()){
-        if(place_sax&&mouse.leftDown){
-            sax_t new_sax{};
-            new_sax.x = X_block;
-            new_sax.y = Y_block;
-            b.saxophones.push_back(new_sax);
-            place_sax = false;
-        }
-    }
-    
-    if(b.saxophones.size()>0){
-        int sax_n = sax_idx+1;
-        ImGui::Text("Edit sax #%d",sax_n);
-        
-        sax_t& sax = b.saxophones[sax_idx];
-        int movement = sax.movement;
-        ImGui::InputInt("movement",&movement,1,5);
-        movement %= 16;
-        sax.movement = movement;
-        
-        int pos_x = sax.x;
-        int pos_y = sax.y;
-        ImGui::InputInt("target x",&pos_x,1,5);
-        ImGui::InputInt("target y",&pos_y,1,5);
-        sax.x = pos_x;
-        sax.y = pos_y;
-        
-    }
-    
-    ImGui::End();
-    
-    if(plate_x>=b.data.size()||plate_y>b.data[0].size()||b.data[plate_x][plate_y].type!=tile_t::plate)
-        edit_plate = false;
     
     if(edit_plate&&draw){
     ImGui::Begin("Plate editor");
         
-        plate_t& P = *(plate_t*)b.data[plate_x][plate_y].cell_data;
+        plate_t& P = *(plate_t*)b.data[edit_x][edit_y].cell_data;
         
         int character = P.character;
         ImGui::InputInt("character",&character,1,5);
@@ -366,7 +554,7 @@ void level_editor(){
     if(edit_door&&draw){
     ImGui::Begin("Door editor");
         
-        door_t& D = *(door_t*)b.data[door_x][door_y].cell_data;
+        door_t& D = *(door_t*)b.data[edit_x][edit_y].cell_data;
         
         int character = D.character;
         ImGui::InputInt("character",&character,1,5);
@@ -377,15 +565,71 @@ void level_editor(){
     ImGui::End();
     }
     
-    if(wall_x>=b.data.size()||wall_y>b.data[0].size()||b.data[wall_x][wall_y].type!=tile_t::wall)
-        edit_wall = false;
+    if(edit_pit&&draw){
+    ImGui::Begin("Pit editor");
+        
+        pit_t& P = *(pit_t*)b.data[edit_x][edit_y].cell_data;
+        
+        int character = P.character;
+        ImGui::InputInt("character",&character,1,5);
+        if(character< 0) character = 0;
+        if(character>26) character = 26;
+        P.character = character;
+        
+    ImGui::End();
+    }
+    
+    if(edit_firepit&&draw){
+    ImGui::Begin("Firepit editor");
+        
+        firepit_t& F = *(firepit_t*)b.data[edit_x][edit_y].cell_data;
+        
+        int variation = F.variation;
+        ImGui::InputInt("Variation",&variation,1,5);
+        if(variation< 0) variation = 0;
+        if(variation>3) variation = 3;
+        F.variation = variation;
+        
+    ImGui::End();
+    }
+    
+    if(edit_exit&&draw){
+    ImGui::Begin("Exit editor");
+        
+        exit_t& E = *(exit_t*)b.data[edit_x][edit_y].cell_data;
+        
+        int variation = E.variation;
+        ImGui::InputInt("Variation",&variation,1,5);
+        if(variation< 0) variation = 0;
+        if(variation>3) variation = 3;
+        E.variation = variation;
+        
+    ImGui::End();
+    }
+    
+    if(edit_floor&&draw){
+    ImGui::Begin("Floor editor");
+        
+        floor_t& F = *(floor_t*)b.data[edit_x][edit_y].cell_data;
+        
+        int variation = F.variation;
+        ImGui::InputInt("Variation",&variation,1,5);
+        if(variation< 0) variation = 0;
+        if(variation>3) variation = 3;
+        F.variation = variation;
+        
+    ImGui::End();
+    }
+    
     if(edit_wall&&draw){
     ImGui::Begin("Wall editor");
-        wall_t& W = *(wall_t*)b.data[wall_x][wall_y].cell_data;
+        wall_t& W = *(wall_t*)b.data[edit_x][edit_y].cell_data;
         
-        int surroundings = W.surroundings;
-        ImGui::InputInt("Surroundings",&surroundings,1,1);
-        W.surroundings = surroundings;
+        int character = W.character;
+        ImGui::InputInt("character",&character,1,5);
+        if(character< 0) character = 0;
+        if(character>26) character = 26;
+        W.character = character;
         
     ImGui::End();
     }

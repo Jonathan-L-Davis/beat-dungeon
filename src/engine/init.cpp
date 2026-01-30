@@ -78,13 +78,14 @@ bool load_atlas(std::string path){
         init_data.atlas.fire_out.w = std::stoi(atlas.GetChildAttrib("w"));
     }else return false;
     
-    if(atlas.FindChildElem("floor")){
-        init_data.atlas.floor.x = std::stoi(atlas.GetChildAttrib("x"));
-        init_data.atlas.floor.y = std::stoi(atlas.GetChildAttrib("y"));
-        init_data.atlas.floor.h = std::stoi(atlas.GetChildAttrib("h"));
-        init_data.atlas.floor.w = std::stoi(atlas.GetChildAttrib("w"));
-    }else return false;
-    
+    for(int i = 0; i < 4; i++){
+        if(atlas.FindChildElem("floor")){
+            init_data.atlas.floor[i].x = std::stoi(atlas.GetChildAttrib("x"));
+            init_data.atlas.floor[i].y = std::stoi(atlas.GetChildAttrib("y"));
+            init_data.atlas.floor[i].h = std::stoi(atlas.GetChildAttrib("h"));
+            init_data.atlas.floor[i].w = std::stoi(atlas.GetChildAttrib("w"));
+        }else return false;
+    }
     if(atlas.FindChildElem("plate")){
         init_data.atlas.plate.x = std::stoi(atlas.GetChildAttrib("x"));
         init_data.atlas.plate.y = std::stoi(atlas.GetChildAttrib("y"));
@@ -118,6 +119,20 @@ bool load_atlas(std::string path){
         init_data.atlas.notes.y = std::stoi(atlas.GetChildAttrib("y"));
         init_data.atlas.notes.h = std::stoi(atlas.GetChildAttrib("h"));
         init_data.atlas.notes.w = std::stoi(atlas.GetChildAttrib("w"));
+    }else return false;
+    
+    if(atlas.FindChildElem("demon")){
+        init_data.atlas.demon.x = std::stoi(atlas.GetChildAttrib("x"));
+        init_data.atlas.demon.y = std::stoi(atlas.GetChildAttrib("y"));
+        init_data.atlas.demon.h = std::stoi(atlas.GetChildAttrib("h"));
+        init_data.atlas.demon.w = std::stoi(atlas.GetChildAttrib("w"));
+    }else return false;
+    
+    if(atlas.FindChildElem("fireball")){
+        init_data.atlas.fireball.x = std::stoi(atlas.GetChildAttrib("x"));
+        init_data.atlas.fireball.y = std::stoi(atlas.GetChildAttrib("y"));
+        init_data.atlas.fireball.h = std::stoi(atlas.GetChildAttrib("h"));
+        init_data.atlas.fireball.w = std::stoi(atlas.GetChildAttrib("w"));
     }else return false;
     
     if(atlas.FindChildElem("wall_1_tl_000")){

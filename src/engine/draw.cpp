@@ -43,6 +43,8 @@ std::vector<uint16_t> index_quads(std::vector<graphics::vulkan::Vertex> tris){
 
 void draw(){
     graphics::start_frame();
+    SDL_FRect src,dst;
+    SDL_RenderTexture(nullptr,nullptr,&src,&dst);
     
     int width, height;
     SDL_GetWindowSize(window, &width, &height);
