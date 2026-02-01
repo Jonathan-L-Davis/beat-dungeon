@@ -1,0 +1,6 @@
+<config>
+    <general>
+        <display-name>beat-dungeon</display-name>
+    </general>
+    <atlas file="res/atlas.xml"/>
+</config>
