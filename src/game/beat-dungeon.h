@@ -1,5 +1,6 @@
 #pragma once
 #include "graphics/graphics.h"
+#include <cstdint>
 // floor types
 enum struct tile_t: uint8_t {
     pit         = 0,
@@ -20,10 +21,12 @@ struct plate_t{
     uint8_t character;
     uint8_t ticks_alive;
     uint8_t max_ticks;// should only last for up to 3 measures
+    uint8_t variation;
 };
 
 struct door_t{
     uint8_t character;
+    uint8_t variation;
 };
 
 struct pit_t{
@@ -73,10 +76,6 @@ struct player_t{
     uint32_t anim_phase = 0;
 };
 
-struct drummer_t{// attacks in a 1 or 2 block "square radius"
-    ;
-};
-
 struct sax_t{// attacks in a straight line
     uint32_t x,y;
     uint8_t movement;
@@ -86,11 +85,7 @@ struct sax_t{// attacks in a straight line
 struct drum_t{// attacks in a straight line
     uint32_t x,y;
     uint8_t movement;
-};
-
-struct notes_t{// attacks in a straight line
-    uint32_t x,y;
-    uint8_t movement;
+    uint8_t shot_cooldown;
 };
 
 struct demon_t{// attacks in a straight line
@@ -99,7 +94,23 @@ struct demon_t{// attacks in a straight line
     uint8_t shot_cooldown;
 };
 
+struct camel_t{// attacks in a straight line
+    uint32_t x,y;
+    uint8_t movement;
+    uint8_t shot_cooldown;
+};
+
+struct notes_t{// attacks in a straight line
+    uint32_t x,y;
+    uint8_t movement;
+};
+
 struct fireball_t{// attacks in a straight line
+    uint32_t x,y;
+    uint8_t movement;
+};
+
+struct spitball_t{// attacks in a straight line
     uint32_t x,y;
     uint8_t movement;
 };
@@ -108,15 +119,23 @@ struct board{
     player_t player;
     //std::vector<entity_t> entities;
     std::string level;
+    float depth;
     std::vector<std::vector<cell_t>> data;
     std::vector<sax_t> saxophones;
     std::vector<drum_t> drums;
-    std::vector<notes_t> notes;
     std::vector<demon_t> demons;
+    std::vector<camel_t> camels;
+    
+    std::vector<notes_t> notes;
     std::vector<fireball_t> fireballs;
+    std::vector<spitball_t> spitballs;
     
     bool load_level(std::string file_name);
     bool save_level(std::string file_name);
+    
+    bool load_level(std::vector<uint8_t>& file);
+    bool save_level(std::vector<uint8_t>& file);
+    
     bool is_flingable(uint32_t x,uint32_t y);
     bool is_walkable(uint32_t x,uint32_t y);
     bool is_visible(uint32_t x,uint32_t y);
@@ -126,12 +145,23 @@ struct board{
     void step_player(int beat,uint8_t movement);
     void step_saxophone(int beat);
     void step_demons(int beat);
-    void step_plates(int beat);
+    void step_plates();
     void step_notes(int beat);
     void step_fireball(int beat);
     void step(int beat,uint8_t movement);
     
     void update_wall_borders();
+    
+    struct sound_bools_t{
+        bool plate_ticked;
+        bool plate_visually_ticked;
+        bool plate_pressed;
+        bool door_opened;
+        bool door_closed;
+        bool player_won;
+    };
+    
+    sound_bools_t sound_bools;
     
 };
 

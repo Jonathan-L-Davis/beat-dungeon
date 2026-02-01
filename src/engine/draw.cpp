@@ -13,6 +13,7 @@
 
 #include <filesystem>
 #include <algorithm>
+#include <cstdint>
 #include <vector>
 #include <cmath>
 #include <set>

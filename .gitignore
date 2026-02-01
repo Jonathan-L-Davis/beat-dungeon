@@ -1,5 +1,6 @@
 /*
 !.gitignore
 !src/
+!res/
 !build.sh
 !README.md

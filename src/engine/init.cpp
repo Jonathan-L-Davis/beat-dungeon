@@ -86,6 +86,7 @@ bool load_atlas(std::string path){
             init_data.atlas.floor[i].w = std::stoi(atlas.GetChildAttrib("w"));
         }else return false;
     }
+    
     if(atlas.FindChildElem("plate")){
         init_data.atlas.plate.x = std::stoi(atlas.GetChildAttrib("x"));
         init_data.atlas.plate.y = std::stoi(atlas.GetChildAttrib("y"));
@@ -134,6 +135,15 @@ bool load_atlas(std::string path){
         init_data.atlas.fireball.h = std::stoi(atlas.GetChildAttrib("h"));
         init_data.atlas.fireball.w = std::stoi(atlas.GetChildAttrib("w"));
     }else return false;
+    
+    for(int i = 0; i < 4; i++){
+        if(atlas.FindChildElem("plate_tick")){
+            init_data.atlas.plate_tick[i].x = std::stoi(atlas.GetChildAttrib("x"));
+            init_data.atlas.plate_tick[i].y = std::stoi(atlas.GetChildAttrib("y"));
+            init_data.atlas.plate_tick[i].h = std::stoi(atlas.GetChildAttrib("h"));
+            init_data.atlas.plate_tick[i].w = std::stoi(atlas.GetChildAttrib("w"));
+        }else return false;
+    }
     
     if(atlas.FindChildElem("wall_1_tl_000")){
         init_data.atlas.wall_1_tl_000.x = std::stoi(atlas.GetChildAttrib("x"));
@@ -358,6 +368,15 @@ bool load_atlas(std::string path){
         init_data.atlas.wall_1_bl_111.h = std::stoi(atlas.GetChildAttrib("h"));
         init_data.atlas.wall_1_bl_111.w = std::stoi(atlas.GetChildAttrib("w"));
     }else return false;
+    
+    for(int i = 0; i < 4; i++){
+        if(atlas.FindChildElem("heiroglyphics")){
+            init_data.atlas.heiroglyphics[i].x = std::stoi(atlas.GetChildAttrib("x"));
+            init_data.atlas.heiroglyphics[i].y = std::stoi(atlas.GetChildAttrib("y"));
+            init_data.atlas.heiroglyphics[i].h = std::stoi(atlas.GetChildAttrib("h"));
+            init_data.atlas.heiroglyphics[i].w = std::stoi(atlas.GetChildAttrib("w"));
+        }else return false;
+    }
     
     return true;
 }

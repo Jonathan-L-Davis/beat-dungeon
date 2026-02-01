@@ -15,6 +15,7 @@
 
 #include <filesystem>
 #include <algorithm>
+#include <cstdint>
 #include <vector>
 #include <cmath>
 #include <set>
@@ -55,12 +56,6 @@ std::string level_selector(){
 void entity_manager(int X_block,int Y_block, bool &draw, bool &place_entities){
     ImGui::Begin("Entity Manager");
     
-    if(!place_entities&&ImGui::Button("Place Entites",{200,50})){
-        draw = false;
-        place_entities = true;
-    }else// the else prevents them both appearing on the frame of transition.
-    if( place_entities&&ImGui::Button("No Place Entites",{200,50})) place_entities = false;
-    
     static bool place_player = false;
     static bool place_sax = false;
     static int sax_idx = 0;
@@ -71,11 +66,13 @@ void entity_manager(int X_block,int Y_block, bool &draw, bool &place_entities){
     static bool place_fireball = false;
     static int fireball_idx = 0;
     
-    if(place_player)ImGui::Text("Placing Player");
-    if(place_sax)ImGui::Text("Placing Saxophone");
-    if(place_notes)ImGui::Text("Placing Notes");
-    if(place_demon)ImGui::Text("Placing Demon");
-    if(place_fireball)ImGui::Text("Placing Fireball");
+         if(place_player)   ImGui::Text("Placing Player");
+    else if(place_sax)      ImGui::Text("Placing Saxophone");
+    else if(place_notes)    ImGui::Text("Placing Notes");
+    else if(place_demon)    ImGui::Text("Placing Demon");
+    else if(place_fireball) ImGui::Text("Placing Fireball");
+    else                    ImGui::Text("Not placing any entities.");
+    ImGui::Separator();
     
     if(place_entities&&X_block>=0&&X_block<b.data.size()&&Y_block>=0&&Y_block<b.data[0].size()){
         if(place_player&&mouse.leftDown){
@@ -117,25 +114,31 @@ void entity_manager(int X_block,int Y_block, bool &draw, bool &place_entities){
         }
     }
     
-    if(ImGui::Button("Place player")){
+    if(ImGui::Button("Place player",{125,25})){
         place_player = !place_player;
         place_sax = false;
         place_notes = false;
         place_demon = false;
         place_fireball = false;
+        draw = false;
+        place_entities = place_player;
     }
+    
+    ImGui::Separator();
     
     int num_saxophones = b.saxophones.size();
     ImGui::Text("# Saxophones: %d", num_saxophones);
-    if(ImGui::Button("Place saxophone")){
+    if(ImGui::Button("Place saxophone",{125,25})){
         place_player = false;
         place_sax = !place_sax;
         place_notes = false;
         place_demon = false;
         place_fireball = false;
+        draw = false;
+        place_entities = place_sax;
     }
     
-    if(b.saxophones.size()&&ImGui::Button("Delete saxophone")){
+    if(b.saxophones.size()&&ImGui::Button("Delete saxophone",{125,25})){
         b.saxophones.erase(b.saxophones.begin()+sax_idx);
     }
     
@@ -164,17 +167,21 @@ void entity_manager(int X_block,int Y_block, bool &draw, bool &place_entities){
         
     }
     
+    ImGui::Separator();
+    
     int num_notes = b.notes.size();
     ImGui::Text("# Notes: %d", num_notes);
-    if(ImGui::Button("Place notes")){
+    if(ImGui::Button("Place notes",{125,25})){
         place_player = false;
         place_sax = false;
         place_notes = !place_notes;
         place_demon = false;
         place_fireball = false;
+        draw = false;
+        place_entities = place_notes;
     }
     
-    if(b.notes.size()&&ImGui::Button("Delete notes")){
+    if(b.notes.size()&&ImGui::Button("Delete notes",{125,25})){
         b.notes.erase(b.notes.begin()+notes_idx);
     }
     
@@ -203,17 +210,21 @@ void entity_manager(int X_block,int Y_block, bool &draw, bool &place_entities){
         
     }
     
+    ImGui::Separator();
+    
     int num_demons = b.demons.size();
     ImGui::Text("# Demons: %d", num_demons);
-    if(ImGui::Button("Place demon")){
+    if(ImGui::Button("Place demon",{125,25})){
         place_player = false;
         place_sax = false;
         place_notes = false;
         place_demon = !place_demon;
         place_fireball = false;
+        draw = false;
+        place_entities = place_demon;
     }
     
-    if(b.demons.size()&&ImGui::Button("Delete demon")){
+    if(b.demons.size()&&ImGui::Button("Delete demon",{125,25})){
         b.demons.erase(b.demons.begin()+demon_idx);
     }
     
@@ -242,21 +253,25 @@ void entity_manager(int X_block,int Y_block, bool &draw, bool &place_entities){
         
     }
     
+    ImGui::Separator();
+    
     int num_fireballs = b.fireballs.size();
     ImGui::Text("# Fireballs: %d", num_fireballs);
-    if(ImGui::Button("Place fireball")){
+    if(ImGui::Button("Place fireball",{125,25})){
         place_player = false;
         place_sax = false;
         place_notes = false;
         place_demon = false;
         place_fireball = !place_fireball;
+        draw = false;
+        place_entities = place_fireball;
     }
     
-    if(b.fireballs.size()&&ImGui::Button("Delete fireball")){
+    if(b.fireballs.size()&&ImGui::Button("Delete fireball",{125,25})){
         b.fireballs.erase(b.fireballs.begin()+fireball_idx);
     }
     
-    if(b.notes.size()>0){
+    if(b.fireballs.size()>0){
         fireball_idx++;
         ImGui::InputInt("Fireball Index",&fireball_idx,1,1);
         notes_idx--;
@@ -294,11 +309,11 @@ void level_editor(){
     
     float x0 = b.data.size()/-2.f;
     float y0 = b.data[0].size()/-2.f;
-    glm::vec4 origin = ubo.proj*ubo.view*ubo.model*glm::vec4(x0-.5f,y0-.5f,20,1);
+    glm::vec4 origin = ubo.proj*ubo.view*ubo.model*glm::vec4(x0-.5f,y0-.5f,b.depth,1);
     
     float x1 = b.data.size()/2.f;
     float y1 = b.data[0].size()/2.f;
-    glm::vec4 max_p = ubo.proj*ubo.view*ubo.model*glm::vec4(x1-.5f,y1-.5f,20,1);
+    glm::vec4 max_p = ubo.proj*ubo.view*ubo.model*glm::vec4(x1-.5f,y1-.5f,b.depth,1);
     
     // should probably be deferred to the update function again, but ehh. Not necessary now. May be fine like this forever.
     if(std::string new_level = level_selector();new_level!=""){
@@ -315,6 +330,12 @@ void level_editor(){
         
         static int selected_x = 0;
         static int selected_y = 0;
+        
+        float depth = b.depth;
+        ImGui::InputFloat("Depth",&depth,1,5);
+        if(depth < 1) depth = 1;
+        if(depth > 100) depth = 100;
+        b.depth = depth;
         
         if(b.data.size()>0){
             ImGui::Text("board is %zu by %zu tiles.",b.data.size(),b.data[0].size());
@@ -561,6 +582,12 @@ void level_editor(){
         if(character< 0) character = 0;
         if(character>26) character = 26;
         D.character = character;
+        
+        int variation = D.variation;
+        ImGui::InputInt("Variation",&variation,1,5);
+        if(variation< 0) variation = 0;
+        if(variation>3) variation = 3;
+        D.variation = variation;
         
     ImGui::End();
     }
