@@ -5,6 +5,9 @@
 #define keyRegistrarDetails
 #include "engine/io/keyboard.h"
 extern keyRegistrar keyboard;
+#define mouseRegistrarDetails
+#include "io/mouse.h"
+extern mouseRegistrar allMice;
 
 #include "game/beat-dungeon.h"
 
@@ -14,7 +17,10 @@ extern keyRegistrar keyboard;
 #include <thread>
 
 extern key up,down,left,right;
+extern mouse_t mouse;
+
 init_data_t init_data;
+
 extern board b;
 
 std::thread audio_thread;
@@ -439,11 +445,13 @@ void init(std::string title){
     left.setKeys({SDLK_A,SDLK_LEFT});
     down.setKeys({SDLK_S,SDLK_DOWN});
     right.setKeys({SDLK_D,SDLK_RIGHT});
-    /*// should really not work, but I want it to sooo bad. It's supposed to be an automatically tracked key thing, but it's busted due to initialization order fiasco.
+    //*// should really not work, but I want it to sooo bad. It's supposed to be an automatically tracked key thing, but it's busted due to initialization order fiasco.
     keyboard.registerKey(&up);
     keyboard.registerKey(&left);
     keyboard.registerKey(&down);
     keyboard.registerKey(&right);//*/
+    
+    allMice.registerMouse(&mouse);
     
     if(!init_data.config_bools.graphics_initialized){
         std::cout << "Failed to complete initialization of graphics module.\n";

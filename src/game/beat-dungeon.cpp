@@ -8,6 +8,10 @@
 
 #include "audio/audio.h"
 
+extern float volume;
+extern float volume_effects;
+extern float volume_music;
+
 constexpr uint32_t format_version = 2;
 
 constexpr int sax_cooldown = 4;
@@ -20,7 +24,7 @@ constexpr int camel_cooldown = 8;
 constexpr int camel_range = 6;
 
 constexpr glm::vec3 plate_colors[3] = {{.577,.025,0},{1,.25,0},{1,1,0}};
-constexpr glm::vec3 heiroglyphic_colors[3] = {{.094,.396,.063},{1,.5,0},{1,1,0}};
+constexpr glm::vec3 heiroglyphic_colors[3] = {{24.f/255.f/2,101.f/255.f/2,16.f/255.f/2},{1,1,1},{1,1,1}};
 
 std::string to_str(tile_t strMe){
     switch(strMe){
@@ -530,6 +534,8 @@ bool board::is_visible(uint32_t x,uint32_t y){
 
 void board::step(int beat, uint8_t movement){
     
+    sound_bools = sound_bools_t{};
+    
     if(player.dead || player.won){
         player.anim_phase += 1;
         if(player.anim_phase >= 16){
@@ -547,6 +553,17 @@ void board::step(int beat, uint8_t movement){
     step_saxophone(beat);
     step_demons(beat);
     step_player(beat,movement);
+    
+    step_audio();
+    
+}
+
+void board::step_audio(){
+    if(sound_bools.plate_ticked){
+        if(sound_bools.plate_visually_ticked)
+            play_sound("metronome",.2*volume_effects*volume);
+        else play_sound("metronome",.05*volume_effects*volume);
+    }
 }
 
 void board::step_plates(){
@@ -570,26 +587,36 @@ void board::step_plates(){
                     if(plate.ticks_alive==0){// hopefully prevents double triggering
                         for( int x = 0; x < data.size(); x++ )
                             for( int y = 0; y < data[x].size(); y++ )
-                                if( data[x][y].type==tile_t::door_open && (*(door_t*)data[x][y].cell_data).character==character )
+                                if( data[x][y].type==tile_t::door_open && (*(door_t*)data[x][y].cell_data).character==character ){
                                     data[x][y].type = tile_t::door_closed;
-                                else
-                                if( data[x][y].type==tile_t::door_closed && (*(door_t*)data[x][y].cell_data).character==character )
+                                    sound_bools.door_closed = true;
+                                }else
+                                if( data[x][y].type==tile_t::door_closed && (*(door_t*)data[x][y].cell_data).character==character ){
                                     data[x][y].type = tile_t::door_open;
+                                    sound_bools.door_opened = true;
+                                }
                     }
                     plate.ticks_alive = plate.max_ticks;
+                    sound_bools.plate_pressed = true;
                 }
                 
                 if(plate.ticks_alive>0){
                     plate.ticks_alive--;
+                    sound_bools.plate_ticked = true;
+                    if(plate.ticks_alive%4==0)
+                        sound_bools.plate_visually_ticked = true;
                     // put back to original state.
                     if(plate.ticks_alive==0){
                         for( int x = 0; x < data.size(); x++ )
                             for( int y = 0; y < data[x].size(); y++ )
-                                if( data[x][y].type==tile_t::door_open && (*(door_t*)data[x][y].cell_data).character==character )
+                                if( data[x][y].type==tile_t::door_open && (*(door_t*)data[x][y].cell_data).character==character ){
                                     data[x][y].type = tile_t::door_closed;
-                                else
-                                if( data[x][y].type==tile_t::door_closed && (*(door_t*)data[x][y].cell_data).character==character )
+                                    sound_bools.door_closed = true;
+                                }else
+                                if( data[x][y].type==tile_t::door_closed && (*(door_t*)data[x][y].cell_data).character==character ){
                                     data[x][y].type = tile_t::door_open;
+                                    sound_bools.door_opened = true;
+                                }
                     }
                 }
             }
@@ -682,9 +709,12 @@ void board::step_player(int beat,uint8_t movement){
         return;
     }
     
-    for(sax_t& sax:saxophones)
-        if(player.x==sax.x&&player.y==sax.y)
+    for(sax_t& sax:saxophones){
+        if(player.x==sax.x&&player.y==sax.y){
             player.dead=true;
+            sound_bools.player_died = true;
+        }
+    }
     
     for(drum_t& drummer:drums)
         if(player.x==drummer.x&&player.y==drummer.y)
@@ -707,8 +737,10 @@ void board::step_player(int beat,uint8_t movement){
     player.x = new_x;
     player.y = new_y;
     
-    if(data[player.x][player.y].type==tile_t::exit) player.won = true;
-    
+    if(data[player.x][player.y].type==tile_t::exit){
+        player.won = true;
+        sound_bools.player_won = true;
+    }
 }
 
 void board::step_saxophone(int beat){

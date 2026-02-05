@@ -25,6 +25,10 @@ bool pause_request = false;
 bool unpause_request = false;
 bool paused = false;
 
+float volume = 1;
+float volume_effects = 1;
+float volume_music = 1;
+
 std::chrono::time_point<std::chrono::system_clock> pause_time;
 
 void update(double timeStep){
@@ -75,8 +79,6 @@ void update(double timeStep){
         
         sub_beat = 4;
         
-        play_sound("metronome");
-        
         return;
     }
     
@@ -88,8 +90,6 @@ void update(double timeStep){
         movement = 0;
         
         sub_beat = 3;
-        
-        play_sound("metronome",.1);
         
         return;
     }
@@ -103,8 +103,6 @@ void update(double timeStep){
         
         sub_beat = 2;
         
-        play_sound("metronome",.2);
-        
         return;
     }
     
@@ -116,8 +114,6 @@ void update(double timeStep){
         movement = 0;
         
         sub_beat = 1;
-        
-        play_sound("metronome",.1);
         
         return;
     }

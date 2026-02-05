@@ -6,12 +6,13 @@ enum struct tile_t: uint8_t {
     pit         = 0,
     floor       = 1,
     wall        = 2,
-    plate       = 3,// has a count down measured in measures
+    plate       = 3,
     door_open   = 4,
     door_closed = 5,
     firepit_on  = 6,
     firepit_off = 7,
     exit        = 8,
+    bird_bath   = 9,// lol, iykyk
 };
 
 std::string to_str(tile_t strMe);
@@ -150,15 +151,21 @@ struct board{
     void step_fireball(int beat);
     void step(int beat,uint8_t movement);
     
+    void step_audio();
+    
     void update_wall_borders();
     
     struct sound_bools_t{
         bool plate_ticked;
         bool plate_visually_ticked;
         bool plate_pressed;
+        bool plate_unpressed;
+        
         bool door_opened;
         bool door_closed;
+        
         bool player_won;
+        bool player_died;
     };
     
     sound_bools_t sound_bools;

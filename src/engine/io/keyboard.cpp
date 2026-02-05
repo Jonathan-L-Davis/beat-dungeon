@@ -34,7 +34,7 @@ key::key(){
     isKeyActive = false;
     flags = HOLD_ANY_KEY;
 
-    keyboard.registerKey(this);// relies on undefined behavior. Might get away with it since it's in the same translation unit, but still bad practice.
+    //keyboard.registerKey(this);// relies on undefined behavior. Might get away with it since it's in the same translation unit, but still bad practice.
 }
 
 key::key(std::vector<SDL_Keycode> Key_Addresses){

@@ -47,15 +47,15 @@ if [[ $OS == "lin" ]]; then
     TRIPLE=""
     RPATH="-Wl,-rpath=\"\\\$ORIGIN\""
     COMPILER="zig c++"
-    SYSTEM_INCLUDES="-I/usr/include"
+    SYSTEM_INCLUDES="-I~/code/SDL/include -I~/code/glm -I/usr/include"
     LINK_DIRS="-L/usr/local/lib"
-    LINKK_LIBS="-lSDL3 -lX11 -lvulkan"
+    LINK_LIBS="-lSDL3 -lX11 -lvulkan"
 fi
 
 if [[ $OS == "win" ]]; then
     TRIPLE=""
     RPATH=""
-    COMPILER="g++"
+    COMPILER="zig c++"
     SYSTEM_INCLUDES="-I/c/VulkanSDK/1.4.341.0/Include"
     LINK_DIRS="-L/c/VulkanSDK/1.4.341.0/Lib"
     LINK_LIBS="-lSDL3 -lvulkan-1"

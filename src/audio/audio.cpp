@@ -34,7 +34,7 @@ std::map<std::string,std::vector<float>> instruments;
 void audio_func(){
     
     while(!quit){
-        constexpr int minimum_audio = (sample_rate * sizeof (float)) / 2;
+        constexpr int minimum_audio = 512;
         if (SDL_GetAudioStreamQueued(stream) < minimum_audio) {
             std::scoped_lock L(M);
             static float samples[512];  /* this will feed 512 samples each frame until we get to our maximum. */
@@ -114,5 +114,5 @@ void init_sound(){
 
 void play_sound(std::string sound_name, float volume){
     std::scoped_lock L(M);
-    audio_indices.push_back({sound_name,0,0});
+    audio_indices.push_back({sound_name,0,volume});
 }

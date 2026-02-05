@@ -14,7 +14,7 @@ mouse_t::mouse_t(){
 
     isMotionRelative = true;
 
-    allMice.registerMouse(this);
+    //allMice.registerMouse(this);
 }
 
 mouse_t::~mouse_t(){
