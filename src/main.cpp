@@ -1,14 +1,15 @@
 #include "main.h"
 
-#include "chess/space-chess.h"
-#include "graphics/STL/STL.h"
-
 bool quit;
 app_timer app_clock;
 
+#include <iostream>
+
 int main(int argc,char** argv){
     
+    std::cout << "init started\n";
     init("beat-dungeon");
+    std::cout << "init complete\n";
     
     app_clock.start();
     while( !quit ){

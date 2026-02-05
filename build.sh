@@ -48,13 +48,17 @@ if [[ $OS == "lin" ]]; then
     RPATH="-Wl,-rpath=\"\\\$ORIGIN\""
     COMPILER="zig c++"
     SYSTEM_INCLUDES="-I/usr/include"
+    LINK_DIRS="-L/usr/local/lib"
+    LINKK_LIBS="-lSDL3 -lX11 -lvulkan"
 fi
 
 if [[ $OS == "win" ]]; then
     TRIPLE=""
     RPATH=""
     COMPILER="g++"
-    SYSTEM_INCLUDES="-I~/code/SDL/include -I~/code/glm -I/c/VulkanSDL/1.4.335.0/Include"
+    SYSTEM_INCLUDES="-I/c/VulkanSDK/1.4.341.0/Include"
+    LINK_DIRS="-L/c/VulkanSDK/1.4.341.0/Lib"
+    LINK_LIBS="-lSDL3 -lvulkan-1"
 fi
 
 mkdir -p obj
@@ -71,7 +75,7 @@ for file in "${Source_Files[@]}" ; do
     path="$(dirname $file)"
     Object_Files+=( "${object_file}" )
     mkdir -p "obj/$path" # otherwise clang++/g++ complain about non-existing directory
-    $COMPILER $TARGET "$file" -g -o "${object_file}" -std=c++23 -O0 -c -Isrc $SYSTEM_INCLUDES
+    $COMPILER $TRIPLE "$file" -g -o "${object_file}" -std=c++20 -O0 -c -Isrc $SYSTEM_INCLUDES
 done
 
 for object in "${Object_Files[@]}" ; do
@@ -79,7 +83,7 @@ for object in "${Object_Files[@]}" ; do
 done
 
 mkdir -p gen/
-$COMPILER $TARGET $file_glob -o "gen/${Executable}"  -L/usr/local/lib -lSDL3 -lX11 -lvulkan
+$COMPILER $TRIPLE $file_glob -o "gen/${Executable}"  $LINK_DIRS $LINK_LIBS
 
 mkdir -p res/shaders
 glslc src/shader/vertex/shader.vert -o res/shaders/vert.spv
