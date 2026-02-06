@@ -185,7 +185,7 @@ namespace graphics{
                 printf("Error: SDL_Init(): %s\n", SDL_GetError());
                 return false;
             }
-            std::cout << "init'd SDL\n";
+            
             // Create window with Vulkan graphics context
             float main_scale = SDL_GetDisplayContentScale(SDL_GetPrimaryDisplay());
             SDL_WindowFlags window_flags = SDL_WINDOW_VULKAN | SDL_WINDOW_RESIZABLE | SDL_WINDOW_HIDDEN | SDL_WINDOW_HIGH_PIXEL_DENSITY;
@@ -203,15 +203,11 @@ namespace graphics{
                 for (uint32_t n = 0; n < sdl_extensions_count; n++)
                     extensions.push_back(sdl_extensions[n]);
             }
-            std::cout << "STARTING BIG BOI CODE\n";
+            
             success &= create_instance();
-            if(!success) std::cout << "Failed to create instance.\n";
-            else std::cout << "Created instance\n";
             success &= start_validation_layers();
             success &= create_vulkan_surface();
-            std::cout << "selecting a GPU.\n";
             success &= select_device();
-            std::cout << "selected a GPU.\n";
             success &= create_logical_device();
             success &= create_swapchain();
             success &= create_image_views();
@@ -219,7 +215,6 @@ namespace graphics{
             success &= create_descriptor_set_layout();
             success &= create_pipeline();
             success &= create_framebuffers();
-            std::cout << "Halfway\n";
             success &= create_command_pool();
             success &= load_textures();
             success &= create_texture_views();
@@ -231,7 +226,6 @@ namespace graphics{
             success &= create_descriptor_sets();
             success &= create_command_buffers();
             success &= create_sync_objects();
-            std::cout << "GG, vulkan init'd.\n";
             //////////////////////////// Pure IMGUI set up after this point. Figure out which variables are needed and move them into a proper function.
             
             // Setup Dear ImGui context
@@ -278,7 +272,8 @@ namespace graphics{
                     { VK_DESCRIPTOR_TYPE_STORAGE_BUFFER_DYNAMIC, 1000 },
                     { VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT, 1000 }
                 };
-
+                
+                
                 VkDescriptorPoolCreateInfo pool_info = {};
                 pool_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
                 pool_info.flags = VK_DESCRIPTOR_POOL_CREATE_FREE_DESCRIPTOR_SET_BIT;
@@ -455,7 +450,6 @@ namespace graphics{
             appInfo.apiVersion = VK_API_VERSION_1_0;
             appInfo.pNext = nullptr;
             
-            std::cout << "1\n";
             // Enumerate available extensions
             uint32_t properties_count;
             std::vector<VkExtensionProperties> properties;
@@ -466,23 +460,19 @@ namespace graphics{
                 std::cout << "Required extension not enabled.\n";
                 success = false;
             }
-            std::cout << "2\n";
             
             // Enable required extensions
             for(auto ext : desired_extensions)
                 if (IsExtensionAvailable(properties, ext))
                     instance_extensions.push_back(ext);
             
-            std::cout << "2.1\n";
             VkInstanceCreateInfo createInfo{};
             createInfo.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
             createInfo.pApplicationInfo = &appInfo;
             
-            std::cout << "2.2\n";
             createInfo.enabledExtensionCount = instance_extensions.size();
             createInfo.ppEnabledExtensionNames = instance_extensions.data();
             
-            std::cout << "3\n";
             VkDebugUtilsMessengerCreateInfoEXT debugCreateInfo{};
             if (enableValidationLayers) {
                 createInfo.enabledLayerCount = static_cast<uint32_t>(validationLayers.size());
@@ -496,7 +486,6 @@ namespace graphics{
 
                 createInfo.pNext = nullptr;
             }
-            std::cout << "4\n";
             
             if (auto err = vkCreateInstance(&createInfo, nullptr, &instance); err != VK_SUCCESS){
                 success = false;
@@ -728,7 +717,6 @@ namespace graphics{
         }
         
         bool create_swapchain(){
-            std::cout << "new swapchain.\n";
             SwapChainSupportDetails swapChainSupport = querySwapChainSupport(PhysicalDevice);
             
             VkSurfaceFormatKHR surfaceFormat = chooseSwapSurfaceFormat(swapChainSupport.formats);

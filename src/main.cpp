@@ -7,9 +7,7 @@ app_timer app_clock;
 
 int main(int argc,char** argv){
     
-    std::cout << "init started\n";
     init("beat-dungeon");
-    std::cout << "init complete\n";
     
     app_clock.start();
     while( !quit ){

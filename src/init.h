@@ -21,7 +21,7 @@ struct init_data_t{
     
     struct atlas_t{
         uint32_t h,w;
-        rect player,wall_top,wall,drummer,sax,fire,fire_out,floor[4],plate,door_open,door_closed,exit,notes,demon,fireball;
+        rect player,wall_top,wall,drummer,sax,fire,fire_out,bird_bath,floor[4],plate,door_open,door_closed,exit,notes,demon,fireball;
         
         rect plate_tick[4];
         

@@ -86,6 +86,13 @@ bool load_atlas(std::string path){
         init_data.atlas.fire_out.w = std::stoi(atlas.GetChildAttrib("w"));
     }else return false;
     
+    if(atlas.FindChildElem("bird_bath")){
+        init_data.atlas.bird_bath.x = std::stoi(atlas.GetChildAttrib("x"));
+        init_data.atlas.bird_bath.y = std::stoi(atlas.GetChildAttrib("y"));
+        init_data.atlas.bird_bath.h = std::stoi(atlas.GetChildAttrib("h"));
+        init_data.atlas.bird_bath.w = std::stoi(atlas.GetChildAttrib("w"));
+    }else return false;
+    
     for(int i = 0; i < 4; i++){
         if(atlas.FindChildElem("floor")){
             init_data.atlas.floor[i].x = std::stoi(atlas.GetChildAttrib("x"));
@@ -377,7 +384,7 @@ bool load_atlas(std::string path){
         init_data.atlas.wall_1_bl_111.w = std::stoi(atlas.GetChildAttrib("w"));
     }else return false;
     
-    for(int i = 0; i < 4; i++){
+    for(int i = 0; i < 32; i++){
         if(atlas.FindChildElem("heiroglyphics")){
             init_data.atlas.heiroglyphics[i].x = std::stoi(atlas.GetChildAttrib("x"));
             init_data.atlas.heiroglyphics[i].y = std::stoi(atlas.GetChildAttrib("y"));
@@ -441,12 +448,8 @@ bool save_config(std::string path){
 
 void init(std::string title){
     
-    std::cout << "inside init function.\n";
-    
     init_data.config_bools.config_loaded = load_config("config.xml");
-    std::cout << "read config file.\n";
     init_data.config_bools.graphics_initialized = graphics::initialize();
-    std::cout << "initialized graphics.\n";
     
     up.setKeys({SDLK_W,SDLK_UP});
     left.setKeys({SDLK_A,SDLK_LEFT});
@@ -459,8 +462,6 @@ void init(std::string title){
     keyboard.registerKey(&right);//*/
     
     allMice.registerMouse(&mouse);
-    
-    std::cout << "Made it past reading the xml & registering keys/mice.\n";
     
     if(!init_data.config_bools.graphics_initialized){
         std::cout << "Failed to complete initialization of graphics module.\n";

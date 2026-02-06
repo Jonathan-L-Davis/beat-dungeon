@@ -14,17 +14,29 @@ extern float volume_music;
 
 constexpr uint32_t format_version = 2;
 
-constexpr int sax_cooldown = 4;
+constexpr int sax_cooldown = 6;
 constexpr int sax_range = 6;
 constexpr int drum_cooldown = 4;
 constexpr int drum_range = 6;
-constexpr int demon_cooldown = 2;
+constexpr int demon_cooldown = 6;
 constexpr int demon_range = 6;
 constexpr int camel_cooldown = 8;
 constexpr int camel_range = 6;
 
+constexpr float lin2srgb(float q){
+    if(q<=0.0031308)
+        return 12.92f*q;
+    return 1.055f*std::pow(q,1.f/2.4f)-.055f;
+}
+
+constexpr float srgb2lin(float q){
+    if(q<=0.04045)
+        return q/12.92f;
+    return std::pow((q+.055f)/1.055f,2.4f);
+}
+
 constexpr glm::vec3 plate_colors[3] = {{.577,.025,0},{1,.25,0},{1,1,0}};
-constexpr glm::vec3 heiroglyphic_colors[3] = {{24.f/255.f/2,101.f/255.f/2,16.f/255.f/2},{1,1,1},{1,1,1}};
+constexpr glm::vec3 heiroglyphic_colors[3] = {{24.f/255.f,101.f/255.f,16.f/255.f},{1,1,1},{1,1,1}};
 
 std::string to_str(tile_t strMe){
     switch(strMe){
@@ -37,6 +49,7 @@ std::string to_str(tile_t strMe){
         case tile_t::firepit_on  : return "firepit_on";
         case tile_t::firepit_off : return "firepit_off";
         case tile_t::exit        : return "exit";
+        case tile_t::bird_bath   : return "bird_bath";
     }
 }
 
@@ -73,7 +86,7 @@ bool board::load_level(std::vector<uint8_t>& file){
     int idx = 0;
     uint32_t file_version;
     read_from_buffer(file,idx,file_version);
-    //assert(file_version =< 2 && "Oh no! You tried to load a file with version greater than exists!");
+    assert(file_version <= format_version && "Oh no! You tried to load a file with version greater than exists!");
     
     uint32_t x,y;
     read_from_buffer(file,idx,x);
@@ -101,7 +114,8 @@ bool board::load_level(std::vector<uint8_t>& file){
                     }
                 }break;
                 case tile_t::firepit_on:
-                case tile_t::firepit_off:{
+                case tile_t::firepit_off:
+                case tile_t::bird_bath:{
                     data[i][j].cell_data = new firepit_t{};
                     firepit_t& firepit = *((firepit_t*)data[i][j].cell_data);
                     if(file_version>=1){
@@ -132,7 +146,7 @@ bool board::load_level(std::vector<uint8_t>& file){
                 }break;
                 case tile_t::wall:{
                     data[i][j].cell_data = new wall_t{};
-                    wall_t wall = *((wall_t*)data[i][j].cell_data);
+                    wall_t& wall = *((wall_t*)data[i][j].cell_data);
                     if(file_version>=1){
                         read_from_buffer(file, idx, wall.character);
                         read_from_buffer(file, idx, wall.variation);
@@ -292,7 +306,8 @@ bool board::save_level(std::vector<uint8_t>& file){
                     append_to_buffer(file, (uint8_t)pit.character);
                 }break;
                 case tile_t::firepit_on:
-                case tile_t::firepit_off:{
+                case tile_t::firepit_off:
+                case tile_t::bird_bath:{
                     firepit_t& firepit = *((firepit_t*)c.cell_data);
                     append_to_buffer(file, (uint8_t)firepit.variation);
                 }break;
@@ -415,6 +430,7 @@ void board::resize(int x, int y){
                 break;
                 case tile_t::firepit_on:
                 case tile_t::firepit_off:
+                case tile_t::bird_bath:
                     delete (plate_t*) data[i][j].cell_data;
                     data[i][j].cell_data = nullptr;
                 break;
@@ -528,6 +544,7 @@ bool board::is_visible(uint32_t x,uint32_t y){
     if(data[x][y].type==tile_t::pit) return true;
     if(data[x][y].type==tile_t::firepit_on) return true;
     if(data[x][y].type==tile_t::firepit_off) return true;
+    if(data[x][y].type==tile_t::bird_bath) return true;
     
     return false;
 }
@@ -553,6 +570,9 @@ void board::step(int beat, uint8_t movement){
     step_saxophone(beat);
     step_demons(beat);
     step_player(beat,movement);
+    step_kill_entities();
+    step_projectile_cancellation();
+    step_light_pits();// also kills non-moving projectiles.
     
     step_audio();
     
@@ -562,7 +582,7 @@ void board::step_audio(){
     if(sound_bools.plate_ticked){
         if(sound_bools.plate_visually_ticked)
             play_sound("metronome",.2*volume_effects*volume);
-        else play_sound("metronome",.05*volume_effects*volume);
+        else play_sound("metronome",.1*volume_effects*volume);
     }
 }
 
@@ -600,8 +620,9 @@ void board::step_plates(){
                     sound_bools.plate_pressed = true;
                 }
                 
-                if(plate.ticks_alive>0){
+                if(plate.ticks_alive>0&&!stepped_on){
                     plate.ticks_alive--;
+                    if(plate.ticks_alive%2==0)
                     sound_bools.plate_ticked = true;
                     if(plate.ticks_alive%4==0)
                         sound_bools.plate_visually_ticked = true;
@@ -1021,26 +1042,6 @@ void board::step_notes(int beat){
         note.y = new_y;
         
     }
-    
-    for(int i = notes.size()-1; i >= 0; i--){
-        notes_t& note = notes[i];
-        
-        if(data[note.x][note.y].type==tile_t::firepit_on){
-            note.movement = 0;// broken into 2 loops to catch all notes that move on a flame in the same turn.
-        }
-    }
-    
-    for(int i = notes.size()-1; i >= 0; i--){
-        notes_t& note = notes[i];
-        
-        if(data[note.x][note.y].type==tile_t::firepit_on){
-            data[note.x][note.y].type = tile_t::firepit_off;
-        }
-        
-        if(note.movement==0)
-            notes.erase(notes.begin()+i);
-        
-    }
 }
 
 void board::step_fireball(int beat){
@@ -1081,12 +1082,58 @@ void board::step_fireball(int beat){
         fireball.y = new_y;
         
     }
+}
+
+void board::step_kill_entities(){
+    for(int i = saxophones.size()-1; i >= 0; i--){
+        sax_t& sax = saxophones[i];
+        
+        bool marked_for_death = false;
+        
+        for(const fireball_t& fireball:fireballs){
+            if(fireball.x==sax.x&&fireball.y==sax.y)
+                marked_for_death = true;
+        }
+        
+        if(marked_for_death)
+            saxophones.erase(saxophones.begin()+i);
+        
+    }
+}
+
+void board::step_light_pits(){
     
+    // notes put out firepits
+    for(int i = notes.size()-1; i >= 0; i--){
+        notes_t& note = notes[i];
+        
+        if(data[note.x][note.y].type==tile_t::firepit_on){
+            note.movement = 0;// broken into 2 loops to catch all notes that move on a flame in the same turn.
+        }
+    }
+    
+    for(int i = notes.size()-1; i >= 0; i--){
+        notes_t& note = notes[i];
+        
+        if(data[note.x][note.y].type==tile_t::firepit_on){
+            data[note.x][note.y].type = tile_t::firepit_off;
+        }
+        
+        if(note.movement==0)
+            notes.erase(notes.begin()+i);
+        
+    }
+    
+    // fireballs light empty pits & boil bird baths
     for(int i = fireballs.size()-1; i >= 0; i--){
         fireball_t& fireball = fireballs[i];
         
         if(data[fireball.x][fireball.y].type==tile_t::firepit_off){
-            fireball.movement = 0;// broken into 2 loops to catch all notes that move on a flame in the same turn.
+            fireball.movement = 0;
+        }
+        
+        if(data[fireball.x][fireball.y].type==tile_t::bird_bath){
+            fireball.movement = 0;
         }
     }
     
@@ -1097,10 +1144,89 @@ void board::step_fireball(int beat){
             data[fireball.x][fireball.y].type = tile_t::firepit_on;
         }
         
+        if(data[fireball.x][fireball.y].type==tile_t::bird_bath){
+            data[fireball.x][fireball.y].type = tile_t::firepit_off;
+        }
+        
         if(fireball.movement==0)
             fireballs.erase(fireballs.begin()+i);
         
     }
+    
+    // spitballs put out lit pits & fill empty pits
+    for(int i = spitballs.size()-1; i >= 0; i--){
+        spitball_t& spitball = spitballs[i];
+        
+        if(data[spitball.x][spitball.y].type==tile_t::firepit_on){
+            spitball.movement = 0;// broken into 2 loops to catch all notes that move on a flame in the same turn.
+        }
+        
+        if(data[spitball.x][spitball.y].type==tile_t::firepit_off){
+            spitball.movement = 0;// broken into 2 loops to catch all notes that move on a flame in the same turn.
+        }
+    }
+    
+    for(int i = spitballs.size()-1; i >= 0; i--){
+        spitball_t& spitball = spitballs[i];
+        
+        if(data[spitball.x][spitball.y].type==tile_t::firepit_off){
+            data[spitball.x][spitball.y].type = tile_t::bird_bath;
+        }
+        
+        if(data[spitball.x][spitball.y].type==tile_t::firepit_on){
+            data[spitball.x][spitball.y].type = tile_t::firepit_off;
+        }
+        
+        if(spitball.movement==0)
+            spitballs.erase(spitballs.begin()+i);
+        
+    }
+    
+}
+
+void board::step_projectile_cancellation(){
+    std::vector<int> dead_notes;
+    std::vector<int> dead_fireballs;
+    std::vector<int> dead_spitballs;
+    
+    // mark each projectile for death if it's colliding with the wrong type.
+    for(int i = 0; i < notes.size(); i++){
+        for(int j = 0; j < fireballs.size(); j++){
+            if(fireballs[j].x==notes[i].x&&fireballs[j].y==notes[i].y){
+                dead_notes.push_back(i);
+            }
+        }
+    }
+    
+    for(int i = 0; i < fireballs.size(); i++){
+        for(int j = 0; j < spitballs.size(); j++){
+            if(spitballs[j].x==fireballs[i].x&&spitballs[j].y==fireballs[i].y){
+                dead_fireballs.push_back(i);
+            }
+        }
+    }
+    
+    for(int i = 0; i < spitballs.size(); i++){
+        for(int j = 0; j < notes.size(); j++){
+            if(notes[j].x==spitballs[i].x&&notes[j].y==spitballs[i].y){
+                dead_spitballs.push_back(i);
+            }
+        }
+    }
+    
+    // deleting in reverse order so we don't invalidate later indices
+    for(int i = ((int)dead_notes.size())-1; i >= 0; i--){
+        notes.erase(notes.begin()+dead_notes[i]);
+    }
+    
+    for(int i = ((int)dead_fireballs.size())-1; i >= 0; i--){
+        fireballs.erase(fireballs.begin()+dead_fireballs[i]);
+    }
+    
+    for(int i = ((int)dead_spitballs.size())-1; i >= 0; i--){
+        spitballs.erase(spitballs.begin()+dead_spitballs[i]);
+    }
+    
 }
 
 void board::update_wall_borders(){
@@ -1170,6 +1296,7 @@ std::vector<graphics::vulkan::Vertex> draw_board(board b, float aspect_ratio){
                 case tile_t::plate      : texel = get_tex_coords(atlas.plate,atlas.w,atlas.h);       break;
                 case tile_t::firepit_on : texel = get_tex_coords(atlas.fire,atlas.w,atlas.h);        break;
                 case tile_t::firepit_off: texel = get_tex_coords(atlas.fire_out,atlas.w,atlas.h);    break;
+                case tile_t::bird_bath  : texel = get_tex_coords(atlas.bird_bath,atlas.w,atlas.h);   break;
                 case tile_t::door_open  : texel = get_tex_coords(atlas.door_open,atlas.w,atlas.h);   break;
                 case tile_t::door_closed: texel = get_tex_coords(atlas.door_closed,atlas.w,atlas.h); break;
                 case tile_t::exit       : texel = get_tex_coords(atlas.exit,atlas.w,atlas.h);        break;
@@ -1252,6 +1379,7 @@ std::vector<graphics::vulkan::Vertex> draw_board(board b, float aspect_ratio){
                 switch(b.data[x][y].type){
                     case tile_t::firepit_on  : floor_variation = (*(firepit_t*)b.data[x][y].cell_data).variation; draw_floor = true; break;
                     case tile_t::firepit_off : floor_variation = (*(firepit_t*)b.data[x][y].cell_data).variation; draw_floor = true; break;
+                    case tile_t::bird_bath   : floor_variation = (*(firepit_t*)b.data[x][y].cell_data).variation; draw_floor = true; break;
                     case tile_t::door_open   : floor_variation = (*(door_t   *)b.data[x][y].cell_data).variation; draw_floor = true; break;
                     case tile_t::door_closed : floor_variation = (*(door_t   *)b.data[x][y].cell_data).variation; draw_floor = true; break;
                     case tile_t::exit        : floor_variation = (*(exit_t   *)b.data[x][y].cell_data).variation; draw_floor = true; break;
@@ -1286,11 +1414,18 @@ std::vector<graphics::vulkan::Vertex> draw_board(board b, float aspect_ratio){
             }
             
             if(draw_heiroglyphics&&heiroglyphic){
+                
+                glm::vec3 color_h = heiroglyphic_colors[0];
+                
+                color_h.r = srgb2lin(color_h.r);
+                color_h.g = srgb2lin(color_h.g);
+                color_h.b = srgb2lin(color_h.b);
+                
                 std::array<glm::vec2,4> heiroglyphic_texel = get_tex_coords(atlas.heiroglyphics[heiroglyphic-1],atlas.w,atlas.h);
-                retMe.push_back({{x0+x+dX, y0+y+dY, depth}, heiroglyphic_colors[0], heiroglyphic_texel[0]});
-                retMe.push_back({{x1+x+dX, y0+y+dY, depth}, heiroglyphic_colors[0], heiroglyphic_texel[1]});
-                retMe.push_back({{x1+x+dX, y1+y+dY, depth}, heiroglyphic_colors[0], heiroglyphic_texel[2]});
-                retMe.push_back({{x0+x+dX, y1+y+dY, depth}, heiroglyphic_colors[0], heiroglyphic_texel[3]});
+                retMe.push_back({{x0+x+dX, y0+y+dY, depth}, color_h, heiroglyphic_texel[0]});
+                retMe.push_back({{x1+x+dX, y0+y+dY, depth}, color_h, heiroglyphic_texel[1]});
+                retMe.push_back({{x1+x+dX, y1+y+dY, depth}, color_h, heiroglyphic_texel[2]});
+                retMe.push_back({{x0+x+dX, y1+y+dY, depth}, color_h, heiroglyphic_texel[3]});
             }
             
             if(b.data[x][y].type==tile_t::plate){

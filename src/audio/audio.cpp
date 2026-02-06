@@ -72,6 +72,28 @@ void audio_func(){
     
 }
 
+void populate_sound_vec(std::vector<float>& sound, std::string file_name){
+    
+    TinyWav metronome_wav;
+    tinywav_open_read(&metronome_wav, "res/audio/metronome.wav", TW_SPLIT);
+    
+    int block_size = 20000;
+    float *samples = new float[2*block_size];
+    
+    float* samplePtrs[2];
+    for (int j = 0; j < 2; ++j) {
+        samplePtrs[j] = samples + j*block_size;
+    }
+    
+    tinywav_read_f(&metronome_wav, samplePtrs, block_size);
+    
+    for(int i = 0; i < block_size; i++){
+        sound.push_back(samplePtrs[0][i]);
+    }
+    
+    tinywav_close_read(&metronome_wav);
+}
+
 void init_sound(){
     if (!SDL_Init(SDL_INIT_AUDIO))
     {
@@ -86,27 +108,8 @@ void init_sound(){
     stream = SDL_OpenAudioDeviceStream(SDL_AUDIO_DEVICE_DEFAULT_PLAYBACK, &spec, NULL, NULL);
     SDL_ResumeAudioStreamDevice(stream);
     
-    TinyWav metronome_wav;
-    tinywav_open_read(&metronome_wav, "res/audio/metronome.wav", TW_SPLIT);
-    
-    int block_size = 20000;
-    float *samples = new float[2*block_size];
-    
-    float* samplePtrs[2];
-    for (int j = 0; j < 2; ++j) {
-        samplePtrs[j] = samples + j*block_size;
-    }
-    
     std::vector<float> metronome;
-    
-    tinywav_read_f(&metronome_wav, samplePtrs, block_size);
-    
-    float mmm = 0;
-    for(int i = 0; i < block_size; i++){
-        metronome.push_back(samplePtrs[0][i]);
-    }
-    
-    tinywav_close_read(&metronome_wav);
+    populate_sound_vec(metronome,"res/audio/metronome.wav");
     
     instruments["metronome"] = metronome;
     

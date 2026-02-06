@@ -165,6 +165,10 @@ void entity_manager(int X_block,int Y_block, bool &draw, bool &place_entities){
         sax.x = pos_x;
         sax.y = pos_y;
         
+        int shot_cooldown = sax.shot_cooldown;
+        ImGui::InputInt("shot_cooldown##sax",&shot_cooldown,1,5);
+        sax.shot_cooldown = shot_cooldown;
+        
     }
     
     ImGui::Separator();
@@ -250,6 +254,10 @@ void entity_manager(int X_block,int Y_block, bool &draw, bool &place_entities){
         ImGui::InputInt("y position##demon",&pos_y,1,5);
         demon.x = pos_x;
         demon.y = pos_y;
+        
+        int shot_cooldown = demon.shot_cooldown;
+        ImGui::InputInt("shot_cooldown##demon",&shot_cooldown,1,5);
+        demon.shot_cooldown = shot_cooldown;
         
     }
     
@@ -397,10 +405,11 @@ void level_editor(){
                 case tile_t::floor       : ImGui::Text("type: floor");       break;
                 case tile_t::wall        : ImGui::Text("type: wall");        break;
                 case tile_t::plate       : ImGui::Text("type: plate");       break;
-                case tile_t::door_open   : ImGui::Text("type: door_open");   break;
-                case tile_t::door_closed : ImGui::Text("type: door_closed"); break;
-                case tile_t::firepit_on  : ImGui::Text("type: firepit_on");  break;
-                case tile_t::firepit_off : ImGui::Text("type: firepit_off"); break;
+                case tile_t::door_open   : ImGui::Text("type: door open");   break;
+                case tile_t::door_closed : ImGui::Text("type: door closed"); break;
+                case tile_t::firepit_on  : ImGui::Text("type: firepit on");  break;
+                case tile_t::firepit_off : ImGui::Text("type: firepit off"); break;
+                case tile_t::bird_bath   : ImGui::Text("type: bird bath");   break;
                 case tile_t::exit        : ImGui::Text("type: exit");        break;
             }
         }else{
@@ -428,10 +437,11 @@ void level_editor(){
         if(ImGui::Button("floor",{100,25})) new_type = tile_t::floor;
         if(ImGui::Button("wall",{100,25})) new_type = tile_t::wall;
         if(ImGui::Button("plate",{100,25})) new_type = tile_t::plate;
-        if(ImGui::Button("door_open",{100,25})) new_type = tile_t::door_open;
-        if(ImGui::Button("door_closed",{100,25})) new_type = tile_t::door_closed;
-        if(ImGui::Button("firepit_on",{100,25})) new_type = tile_t::firepit_on;
-        if(ImGui::Button("firepit_off",{100,25})) new_type = tile_t::firepit_off;
+        if(ImGui::Button("door open",{100,25})) new_type = tile_t::door_open;
+        if(ImGui::Button("door closed",{100,25})) new_type = tile_t::door_closed;
+        if(ImGui::Button("firepit on",{100,25})) new_type = tile_t::firepit_on;
+        if(ImGui::Button("firepit off",{100,25})) new_type = tile_t::firepit_off;
+        if(ImGui::Button("bird bath",{100,25})) new_type = tile_t::bird_bath;
         if(ImGui::Button("exit",{100,25})) new_type = tile_t::exit;
         
         static bool edit_plate = false;
@@ -464,6 +474,7 @@ void level_editor(){
                         case tile_t::door_closed: delete (door_t   *)b.data[X_block][Y_block].cell_data; break;
                         case tile_t::firepit_on : delete (firepit_t*)b.data[X_block][Y_block].cell_data; break;
                         case tile_t::firepit_off: delete (firepit_t*)b.data[X_block][Y_block].cell_data; break;
+                        case tile_t::bird_bath  : delete (firepit_t*)b.data[X_block][Y_block].cell_data; break;
                         case tile_t::exit       : delete (exit_t   *)b.data[X_block][Y_block].cell_data; break;
                     }
                     b.data[X_block][Y_block].type = new_type;
@@ -492,6 +503,7 @@ void level_editor(){
                         case tile_t::door_closed:{
                             b.data[X_block][Y_block].cell_data = new door_t{};
                         }break;
+                        case tile_t::bird_bath:
                         case tile_t::firepit_off:
                         case tile_t::firepit_on:{
                             firepit_t* new_firepit = new firepit_t{};
@@ -580,7 +592,7 @@ void level_editor(){
         int character = D.character;
         ImGui::InputInt("character",&character,1,5);
         if(character< 0) character = 0;
-        if(character>26) character = 26;
+        if(character>32) character = 32;
         D.character = character;
         
         int variation = D.variation;
@@ -600,7 +612,7 @@ void level_editor(){
         int character = P.character;
         ImGui::InputInt("character",&character,1,5);
         if(character< 0) character = 0;
-        if(character>26) character = 26;
+        if(character>32) character = 32;
         P.character = character;
         
     ImGui::End();
@@ -655,8 +667,14 @@ void level_editor(){
         int character = W.character;
         ImGui::InputInt("character",&character,1,5);
         if(character< 0) character = 0;
-        if(character>26) character = 26;
+        if(character>32) character = 32;
         W.character = character;
+        
+        int variation = W.variation;
+        ImGui::InputInt("variation",&variation,1,5);
+        if(character< 0) variation = 0;
+        if(character>3) variation = 3;
+        W.variation = variation;
         
     ImGui::End();
     }

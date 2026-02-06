@@ -5,4 +5,6 @@
 #include <cstdint>
 #include <string>
 
+//enum struct gamestate_t:
+
 #endif//COMMON_H

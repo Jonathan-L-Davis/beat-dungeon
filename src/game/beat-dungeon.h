@@ -149,6 +149,12 @@ struct board{
     void step_plates();
     void step_notes(int beat);
     void step_fireball(int beat);
+    void step_spitball(int beat);
+    void step_kill_player();
+    void step_kill_entities();
+    void step_projectile_cancellation();
+    void step_light_pits();
+    void step_win_player();
     void step(int beat,uint8_t movement);
     
     void step_audio();
@@ -166,6 +172,20 @@ struct board{
         
         bool player_won;
         bool player_died;
+        
+        bool notes_spawned,notes_moved;
+        bool fireball_spawned,fireball_moved;
+        bool spitball_spawned,spitball_moved;
+        
+        bool spit_cancelled_fire;
+        bool fire_cancelled_note;
+        bool note_cancelled_spit;
+        
+        bool fireball_boiled_bird_bath;
+        bool fireball_lit_firepit;
+        bool notes_put_out_firepit;
+        bool spitball_put_out_firepit;
+        bool spitball_filled_firepit;
     };
     
     sound_bools_t sound_bools;

@@ -6,6 +6,7 @@
     <sax           x="48"  y="0"   h="16" w="16"/>
     <fire          x="64"  y="0"   h="16" w="16"/>
     <fire_out      x="80"  y="0"   h="16" w="16"/>
+    <bird_bath     x="80"  y="16"  h="16" w="16"/>
     <floor         x="96"  y="0"   h="16" w="16"/>
     <floor         x="96"  y="16"  h="16" w="16"/>
     <floor         x="96"  y="32"  h="16" w="16"/>
@@ -63,6 +64,37 @@
     <heiroglyphics x="144" y="192" h="16" w="16"/>
     <heiroglyphics x="160" y="192" h="16" w="16"/>
     <heiroglyphics x="176" y="192" h="16" w="16"/>
+    <heiroglyphics x="192" y="192" h="16" w="16"/>
+    <heiroglyphics x="208" y="192" h="16" w="16"/>
+    <heiroglyphics x="224" y="192" h="16" w="16"/>
+    <heiroglyphics x="240" y="192" h="16" w="16"/>
+    
+    <heiroglyphics x="128" y="208" h="16" w="16"/>
+    <heiroglyphics x="144" y="208" h="16" w="16"/>
+    <heiroglyphics x="160" y="208" h="16" w="16"/>
+    <heiroglyphics x="176" y="208" h="16" w="16"/>
+    <heiroglyphics x="192" y="208" h="16" w="16"/>
+    <heiroglyphics x="208" y="208" h="16" w="16"/>
+    <heiroglyphics x="224" y="208" h="16" w="16"/>
+    <heiroglyphics x="240" y="208" h="16" w="16"/>
+    
+    <heiroglyphics x="128" y="224" h="16" w="16"/>
+    <heiroglyphics x="144" y="224" h="16" w="16"/>
+    <heiroglyphics x="160" y="224" h="16" w="16"/>
+    <heiroglyphics x="176" y="224" h="16" w="16"/>
+    <heiroglyphics x="192" y="224" h="16" w="16"/>
+    <heiroglyphics x="208" y="224" h="16" w="16"/>
+    <heiroglyphics x="224" y="224" h="16" w="16"/>
+    <heiroglyphics x="240" y="224" h="16" w="16"/>
+    
+    <heiroglyphics x="128" y="240" h="16" w="16"/>
+    <heiroglyphics x="144" y="240" h="16" w="16"/>
+    <heiroglyphics x="160" y="240" h="16" w="16"/>
+    <heiroglyphics x="176" y="240" h="16" w="16"/>
+    <heiroglyphics x="192" y="240" h="16" w="16"/>
+    <heiroglyphics x="208" y="240" h="16" w="16"/>
+    <heiroglyphics x="224" y="240" h="16" w="16"/>
+    <heiroglyphics x="240" y="240" h="16" w="16"/>
     
 </atlas>
 

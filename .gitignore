@@ -2,6 +2,9 @@
 !.gitignore
 !src/
 !res/
+res/shaders/
+
+
 !levels/
 !build.sh
 !README.md
