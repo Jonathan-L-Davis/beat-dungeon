@@ -15,6 +15,8 @@
 
 #include <set>
 
+#include <iostream>
+
 // validation layers
 const std::vector<const char*> validationLayers = {
     "VK_LAYER_KHRONOS_validation"
@@ -44,9 +46,10 @@ void populateDebugMessengerCreateInfo(VkDebugUtilsMessengerCreateInfoEXT& create
 
 constexpr bool enableValidationLayers = false;
 
-// required extensions
-std::vector<const char*>        instance_extensions={
+std::vector<const char*>        instance_extensions;// extensions we can have (populated at init time).
+std::vector<const char*>        desired_extensions={// extensions we want or need.
     VK_KHR_GET_PHYSICAL_DEVICE_PROPERTIES_2_EXTENSION_NAME,
+    "VK_KHR_win32_surface",
     "VK_KHR_xlib_surface",
     "VK_KHR_surface",
     "VK_EXT_debug_utils"
@@ -182,7 +185,7 @@ namespace graphics{
                 printf("Error: SDL_Init(): %s\n", SDL_GetError());
                 return false;
             }
-            
+            std::cout << "init'd SDL\n";
             // Create window with Vulkan graphics context
             float main_scale = SDL_GetDisplayContentScale(SDL_GetPrimaryDisplay());
             SDL_WindowFlags window_flags = SDL_WINDOW_VULKAN | SDL_WINDOW_RESIZABLE | SDL_WINDOW_HIDDEN | SDL_WINDOW_HIGH_PIXEL_DENSITY;
@@ -200,11 +203,15 @@ namespace graphics{
                 for (uint32_t n = 0; n < sdl_extensions_count; n++)
                     extensions.push_back(sdl_extensions[n]);
             }
-            
+            std::cout << "STARTING BIG BOI CODE\n";
             success &= create_instance();
+            if(!success) std::cout << "Failed to create instance.\n";
+            else std::cout << "Created instance\n";
             success &= start_validation_layers();
             success &= create_vulkan_surface();
+            std::cout << "selecting a GPU.\n";
             success &= select_device();
+            std::cout << "selected a GPU.\n";
             success &= create_logical_device();
             success &= create_swapchain();
             success &= create_image_views();
@@ -212,6 +219,7 @@ namespace graphics{
             success &= create_descriptor_set_layout();
             success &= create_pipeline();
             success &= create_framebuffers();
+            std::cout << "Halfway\n";
             success &= create_command_pool();
             success &= load_textures();
             success &= create_texture_views();
@@ -223,7 +231,7 @@ namespace graphics{
             success &= create_descriptor_sets();
             success &= create_command_buffers();
             success &= create_sync_objects();
-            
+            std::cout << "GG, vulkan init'd.\n";
             //////////////////////////// Pure IMGUI set up after this point. Figure out which variables are needed and move them into a proper function.
             
             // Setup Dear ImGui context
@@ -357,6 +365,15 @@ namespace graphics{
         
         void end_frame(){
             
+            static int last_w=0,last_h=0;
+            int w,h;
+            SDL_GetWindowSize(window, &w, &h);
+            if(last_w!=w||last_h!=h){
+                recreate_swapchain();
+                last_w = w;
+                last_h = h;
+            }
+            
             ImGui::Render();
             ImGui::UpdatePlatformWindows();
             ImGui::RenderPlatformWindowsDefault();
@@ -365,6 +382,8 @@ namespace graphics{
             
             uint32_t imageIndex;
             auto err = vkAcquireNextImageKHR(LogicalDevice, swapChain, UINT64_MAX, imageAvailableSemaphores[currentFrame], VK_NULL_HANDLE, &imageIndex);
+            
+            if(err!=VK_SUCCESS) std::cout << "bad frame?!\n";
             
             if(err==VK_ERROR_OUT_OF_DATE_KHR||err==VK_SUBOPTIMAL_KHR){
                 recreate_swapchain();
@@ -436,7 +455,7 @@ namespace graphics{
             appInfo.apiVersion = VK_API_VERSION_1_0;
             appInfo.pNext = nullptr;
             
-            
+            std::cout << "1\n";
             // Enumerate available extensions
             uint32_t properties_count;
             std::vector<VkExtensionProperties> properties;
@@ -447,19 +466,23 @@ namespace graphics{
                 std::cout << "Required extension not enabled.\n";
                 success = false;
             }
+            std::cout << "2\n";
             
             // Enable required extensions
-            for(auto ext : instance_extensions)
+            for(auto ext : desired_extensions)
                 if (IsExtensionAvailable(properties, ext))
                     instance_extensions.push_back(ext);
             
+            std::cout << "2.1\n";
             VkInstanceCreateInfo createInfo{};
             createInfo.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
             createInfo.pApplicationInfo = &appInfo;
             
+            std::cout << "2.2\n";
             createInfo.enabledExtensionCount = instance_extensions.size();
             createInfo.ppEnabledExtensionNames = instance_extensions.data();
             
+            std::cout << "3\n";
             VkDebugUtilsMessengerCreateInfoEXT debugCreateInfo{};
             if (enableValidationLayers) {
                 createInfo.enabledLayerCount = static_cast<uint32_t>(validationLayers.size());
@@ -473,10 +496,15 @@ namespace graphics{
 
                 createInfo.pNext = nullptr;
             }
+            std::cout << "4\n";
             
-            if (vkCreateInstance(&createInfo, nullptr, &instance) != VK_SUCCESS)
+            if (auto err = vkCreateInstance(&createInfo, nullptr, &instance); err != VK_SUCCESS){
                 success = false;
+                std::cout << err << "\n";
+            }
+            
             if(!success) std::cout << "Why is vulkan instance creation failing?\n";
+            
             return success;
         }
         
@@ -700,6 +728,7 @@ namespace graphics{
         }
         
         bool create_swapchain(){
+            std::cout << "new swapchain.\n";
             SwapChainSupportDetails swapChainSupport = querySwapChainSupport(PhysicalDevice);
             
             VkSurfaceFormatKHR surfaceFormat = chooseSwapSurfaceFormat(swapChainSupport.formats);
@@ -798,6 +827,7 @@ namespace graphics{
             }
 
             assert(false&&"failed to find supported format!");
+            return {};// gets rid of a warning on windows. Nevermind that this won't run. (Maybe with debug flags off I guess). I should probably substitute my own "assert" that exits on failure.
         }
 
         VkFormat findDepthFormat() {
@@ -1063,6 +1093,7 @@ namespace graphics{
             }
             
             assert(false&&"Failed to find a memory type for vertex buffers.\n");
+            return {};// same as above, should substitute my own assert type that exits the program.
         }
         
         bool create_buffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties, VkBuffer& buffer, VkDeviceMemory& bufferMemory){
@@ -1178,7 +1209,7 @@ namespace graphics{
             samplerInfo.addressModeU = VK_SAMPLER_ADDRESS_MODE_REPEAT;
             samplerInfo.addressModeV = VK_SAMPLER_ADDRESS_MODE_REPEAT;
             samplerInfo.addressModeW = VK_SAMPLER_ADDRESS_MODE_REPEAT;
-            samplerInfo.anisotropyEnable = VK_TRUE;
+            samplerInfo.anisotropyEnable = VK_FALSE;
             samplerInfo.maxAnisotropy = properties.limits.maxSamplerAnisotropy;
             samplerInfo.borderColor = VK_BORDER_COLOR_INT_OPAQUE_BLACK;
             samplerInfo.unnormalizedCoordinates = VK_FALSE;

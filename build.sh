@@ -53,7 +53,7 @@ if [[ $OS == "lin" ]]; then
 fi
 
 if [[ $OS == "win" ]]; then
-    TRIPLE=""
+    Executable="${Executable}.exe"
     RPATH=""
     COMPILER="zig c++"
     SYSTEM_INCLUDES="-I/c/VulkanSDK/1.4.341.0/Include"
@@ -75,7 +75,7 @@ for file in "${Source_Files[@]}" ; do
     path="$(dirname $file)"
     Object_Files+=( "${object_file}" )
     mkdir -p "obj/$path" # otherwise clang++/g++ complain about non-existing directory
-    $COMPILER $TRIPLE "$file" -g -o "${object_file}" -std=c++20 -O0 -c -Isrc $SYSTEM_INCLUDES
+    $COMPILER $TRIPLE -D MARKUP_STL "$file" -g -o "${object_file}" -std=c++20 -O0 -c -Isrc $SYSTEM_INCLUDES
 done
 
 for object in "${Object_Files[@]}" ; do
@@ -83,7 +83,7 @@ for object in "${Object_Files[@]}" ; do
 done
 
 mkdir -p gen/
-$COMPILER $TRIPLE $file_glob -o "gen/${Executable}"  $LINK_DIRS $LINK_LIBS
+$COMPILER $TRIPLE $file_glob -o "gen/${Executable}" $LINK_DIRS $LINK_LIBS
 
 mkdir -p res/shaders
 glslc src/shader/vertex/shader.vert -o res/shaders/vert.spv

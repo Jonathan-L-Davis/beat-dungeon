@@ -16,6 +16,8 @@ extern mouseRegistrar allMice;
 
 #include <thread>
 
+#include <iostream>
+
 extern key up,down,left,right;
 extern mouse_t mouse;
 
@@ -438,8 +440,13 @@ bool save_config(std::string path){
 }
 
 void init(std::string title){
+    
+    std::cout << "inside init function.\n";
+    
     init_data.config_bools.config_loaded = load_config("config.xml");
+    std::cout << "read config file.\n";
     init_data.config_bools.graphics_initialized = graphics::initialize();
+    std::cout << "initialized graphics.\n";
     
     up.setKeys({SDLK_W,SDLK_UP});
     left.setKeys({SDLK_A,SDLK_LEFT});
@@ -452,6 +459,8 @@ void init(std::string title){
     keyboard.registerKey(&right);//*/
     
     allMice.registerMouse(&mouse);
+    
+    std::cout << "Made it past reading the xml & registering keys/mice.\n";
     
     if(!init_data.config_bools.graphics_initialized){
         std::cout << "Failed to complete initialization of graphics module.\n";
