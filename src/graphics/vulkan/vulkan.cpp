@@ -732,7 +732,7 @@ namespace graphics{
             createInfo.sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR;
             createInfo.surface = surface;
             
-            MinImageCount = swapChainSupport.capabilities.minImageCount;
+            MinImageCount = swapChainSupport.capabilities.minImageCount<2?2:swapChainSupport.capabilities.minImageCount;
             MaxImageCount = swapChainSupport.capabilities.maxImageCount;
             ImageCount    = imageCount;
             createInfo.minImageCount = imageCount;

@@ -75,7 +75,7 @@ for file in "${Source_Files[@]}" ; do
     path="$(dirname $file)"
     Object_Files+=( "${object_file}" )
     mkdir -p "obj/$path" # otherwise clang++/g++ complain about non-existing directory
-    $COMPILER $TRIPLE -D MARKUP_STL "$file" -g -o "${object_file}" -std=c++20 -O0 -c -Isrc $SYSTEM_INCLUDES
+    $COMPILER $TRIPLE -D MARKUP_STL "$file" -o "${object_file}" -std=c++20 -O0 -c -Isrc $SYSTEM_INCLUDES
 done
 
 for object in "${Object_Files[@]}" ; do
