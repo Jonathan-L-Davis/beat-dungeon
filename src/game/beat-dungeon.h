@@ -195,5 +195,5 @@ struct board{
 // should maybe return a bool?
 // is called 4 times per tick.
 
-std::vector<graphics::vulkan::Vertex> draw_board(board b, float aspect_ratio);
+std::vector<graphics::vulkan::Vertex> draw_board(board b);
 

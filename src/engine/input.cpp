@@ -15,15 +15,13 @@
 extern keyRegistrar keyboard;
 extern mouseRegistrar allMice;
 extern SDL_Window* window;
+extern bool any_key_pressed;
 
 void input(){
     
+    any_key_pressed = false;
+    
     SDL_Event event;
-    //while (SDL_PollEvent(&event))
-    //{
-        //ImGui_ImplSDL3_ProcessEvent(&event);
-    //}
-    //*
     while( SDL_PollEvent( &event ) != 0 )
     {
         //User requests quit
@@ -36,12 +34,7 @@ void input(){
         SDL_Keycode keyEvent = event.key.key;
         if( event.type == SDL_EVENT_KEY_DOWN )
         {
-            ///this is a hard coded emergency out key.
-            ///Escape always lets you exit the program immediately.
-            if( keyEvent == SDLK_ESCAPE){
-                    quit = true;
-            }
-            
+            any_key_pressed = true;
             keyboard.pressKey(keyEvent);
         }
         else if( event.type == SDL_EVENT_KEY_UP )
@@ -61,6 +54,6 @@ void input(){
         {
             allMice.moveMouse(event.motion);
         }
-    }//*/
+    }
     
 }

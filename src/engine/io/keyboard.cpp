@@ -64,7 +64,9 @@ key::~key(){
 
 
 
-
+void key::deactivate(){
+    isKeyActive = false;
+}
 
 void key::pressKey(SDL_Keycode keyPressed){
     

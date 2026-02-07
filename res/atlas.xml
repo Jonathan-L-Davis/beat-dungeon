@@ -24,77 +24,88 @@
     <plate_tick    x="112" y="48"  h="16" w="16"/>
     <plate_tick    x="112" y="32"  h="16" w="16"/>
     
-    <wall_1_tl_000 x="0"   y="224" h="8"  w="8" />
-    <wall_1_tl_001 x="8"   y="224" h="8"  w="8" />
-    <wall_1_tl_010 x="16"  y="224" h="8"  w="8" />
-    <wall_1_tl_011 x="24"  y="224" h="8"  w="8" />
-    <wall_1_tl_100 x="32"  y="224" h="8"  w="8" />
-    <wall_1_tl_101 x="40"  y="224" h="8"  w="8" />
-    <wall_1_tl_110 x="48"  y="224" h="8"  w="8" />
-    <wall_1_tl_111 x="56"  y="224" h="8"  w="8" />
+    <wall_1_tl_000 x="0"   y="160" h="8"  w="8" />
+    <wall_1_tl_001 x="8"   y="160" h="8"  w="8" />
+    <wall_1_tl_010 x="16"  y="160" h="8"  w="8" />
+    <wall_1_tl_011 x="24"  y="160" h="8"  w="8" />
+    <wall_1_tl_100 x="32"  y="160" h="8"  w="8" />
+    <wall_1_tl_101 x="40"  y="160" h="8"  w="8" />
+    <wall_1_tl_110 x="48"  y="160" h="8"  w="8" />
+    <wall_1_tl_111 x="56"  y="160" h="8"  w="8" />
     
-    <wall_1_tr_000 x="0"   y="232" h="8"  w="8" />
-    <wall_1_tr_001 x="8"   y="232" h="8"  w="8" />
-    <wall_1_tr_010 x="16"  y="232" h="8"  w="8" />
-    <wall_1_tr_011 x="24"  y="232" h="8"  w="8" />
-    <wall_1_tr_100 x="32"  y="232" h="8"  w="8" />
-    <wall_1_tr_101 x="40"  y="232" h="8"  w="8" />
-    <wall_1_tr_110 x="48"  y="232" h="8"  w="8" />
-    <wall_1_tr_111 x="56"  y="232" h="8"  w="8" />
+    <wall_1_tr_000 x="0"   y="168" h="8"  w="8" />
+    <wall_1_tr_001 x="8"   y="168" h="8"  w="8" />
+    <wall_1_tr_010 x="16"  y="168" h="8"  w="8" />
+    <wall_1_tr_011 x="24"  y="168" h="8"  w="8" />
+    <wall_1_tr_100 x="32"  y="168" h="8"  w="8" />
+    <wall_1_tr_101 x="40"  y="168" h="8"  w="8" />
+    <wall_1_tr_110 x="48"  y="168" h="8"  w="8" />
+    <wall_1_tr_111 x="56"  y="168" h="8"  w="8" />
     
-    <wall_1_br_000 x="0"   y="240" h="8"  w="8" />
-    <wall_1_br_001 x="8"   y="240" h="8"  w="8" />
-    <wall_1_br_010 x="16"  y="240" h="8"  w="8" />
-    <wall_1_br_011 x="24"  y="240" h="8"  w="8" />
-    <wall_1_br_100 x="32"  y="240" h="8"  w="8" />
-    <wall_1_br_101 x="40"  y="240" h="8"  w="8" />
-    <wall_1_br_110 x="48"  y="240" h="8"  w="8" />
-    <wall_1_br_111 x="56"  y="240" h="8"  w="8" />
+    <wall_1_br_000 x="0"   y="176" h="8"  w="8" />
+    <wall_1_br_001 x="8"   y="176" h="8"  w="8" />
+    <wall_1_br_010 x="16"  y="176" h="8"  w="8" />
+    <wall_1_br_011 x="24"  y="176" h="8"  w="8" />
+    <wall_1_br_100 x="32"  y="176" h="8"  w="8" />
+    <wall_1_br_101 x="40"  y="176" h="8"  w="8" />
+    <wall_1_br_110 x="48"  y="176" h="8"  w="8" />
+    <wall_1_br_111 x="56"  y="176" h="8"  w="8" />
     
-    <wall_1_bl_000 x="0"   y="248" h="8"  w="8" />
-    <wall_1_bl_001 x="8"   y="248" h="8"  w="8" />
-    <wall_1_bl_010 x="16"  y="248" h="8"  w="8" />
-    <wall_1_bl_011 x="24"  y="248" h="8"  w="8" />
-    <wall_1_bl_100 x="32"  y="248" h="8"  w="8" />
-    <wall_1_bl_101 x="40"  y="248" h="8"  w="8" />
-    <wall_1_bl_110 x="48"  y="248" h="8"  w="8" />
-    <wall_1_bl_111 x="56"  y="248" h="8"  w="8" />
+    <wall_1_bl_000 x="0"   y="184" h="8"  w="8" />
+    <wall_1_bl_001 x="8"   y="184" h="8"  w="8" />
+    <wall_1_bl_010 x="16"  y="184" h="8"  w="8" />
+    <wall_1_bl_011 x="24"  y="184" h="8"  w="8" />
+    <wall_1_bl_100 x="32"  y="184" h="8"  w="8" />
+    <wall_1_bl_101 x="40"  y="184" h="8"  w="8" />
+    <wall_1_bl_110 x="48"  y="184" h="8"  w="8" />
+    <wall_1_bl_111 x="56"  y="184" h="8"  w="8" />
     
-    <heiroglyphics x="128" y="192" h="16" w="16"/>
-    <heiroglyphics x="144" y="192" h="16" w="16"/>
-    <heiroglyphics x="160" y="192" h="16" w="16"/>
-    <heiroglyphics x="176" y="192" h="16" w="16"/>
-    <heiroglyphics x="192" y="192" h="16" w="16"/>
-    <heiroglyphics x="208" y="192" h="16" w="16"/>
-    <heiroglyphics x="224" y="192" h="16" w="16"/>
-    <heiroglyphics x="240" y="192" h="16" w="16"/>
+    <heiroglyphics x="0"   y="192" h="16" w="16"/>
+    <heiroglyphics x="16"  y="192" h="16" w="16"/>
+    <heiroglyphics x="32"  y="192" h="16" w="16"/>
+    <heiroglyphics x="48"  y="192" h="16" w="16"/>
+    <heiroglyphics x="64"  y="192" h="16" w="16"/>
+    <heiroglyphics x="80"  y="192" h="16" w="16"/>
+    <heiroglyphics x="96"  y="192" h="16" w="16"/>
+    <heiroglyphics x="108" y="192" h="16" w="16"/>
     
-    <heiroglyphics x="128" y="208" h="16" w="16"/>
-    <heiroglyphics x="144" y="208" h="16" w="16"/>
-    <heiroglyphics x="160" y="208" h="16" w="16"/>
-    <heiroglyphics x="176" y="208" h="16" w="16"/>
-    <heiroglyphics x="192" y="208" h="16" w="16"/>
-    <heiroglyphics x="208" y="208" h="16" w="16"/>
-    <heiroglyphics x="224" y="208" h="16" w="16"/>
-    <heiroglyphics x="240" y="208" h="16" w="16"/>
+    <heiroglyphics x="0"   y="208" h="16" w="16"/>
+    <heiroglyphics x="16"  y="208" h="16" w="16"/>
+    <heiroglyphics x="32"  y="208" h="16" w="16"/>
+    <heiroglyphics x="48"  y="208" h="16" w="16"/>
+    <heiroglyphics x="64"  y="208" h="16" w="16"/>
+    <heiroglyphics x="80"  y="208" h="16" w="16"/>
+    <heiroglyphics x="96"  y="208" h="16" w="16"/>
+    <heiroglyphics x="108" y="208" h="16" w="16"/>
     
-    <heiroglyphics x="128" y="224" h="16" w="16"/>
-    <heiroglyphics x="144" y="224" h="16" w="16"/>
-    <heiroglyphics x="160" y="224" h="16" w="16"/>
-    <heiroglyphics x="176" y="224" h="16" w="16"/>
-    <heiroglyphics x="192" y="224" h="16" w="16"/>
-    <heiroglyphics x="208" y="224" h="16" w="16"/>
-    <heiroglyphics x="224" y="224" h="16" w="16"/>
-    <heiroglyphics x="240" y="224" h="16" w="16"/>
+    <heiroglyphics x="0"   y="224" h="16" w="16"/>
+    <heiroglyphics x="16"  y="224" h="16" w="16"/>
+    <heiroglyphics x="32"  y="224" h="16" w="16"/>
+    <heiroglyphics x="48"  y="224" h="16" w="16"/>
+    <heiroglyphics x="64"  y="224" h="16" w="16"/>
+    <heiroglyphics x="80"  y="224" h="16" w="16"/>
+    <heiroglyphics x="96"  y="224" h="16" w="16"/>
+    <heiroglyphics x="108" y="224" h="16" w="16"/>
     
-    <heiroglyphics x="128" y="240" h="16" w="16"/>
-    <heiroglyphics x="144" y="240" h="16" w="16"/>
-    <heiroglyphics x="160" y="240" h="16" w="16"/>
-    <heiroglyphics x="176" y="240" h="16" w="16"/>
-    <heiroglyphics x="192" y="240" h="16" w="16"/>
-    <heiroglyphics x="208" y="240" h="16" w="16"/>
-    <heiroglyphics x="224" y="240" h="16" w="16"/>
-    <heiroglyphics x="240" y="240" h="16" w="16"/>
+    <heiroglyphics x="0"   y="240" h="16" w="16"/>
+    <heiroglyphics x="16"  y="240" h="16" w="16"/>
+    <heiroglyphics x="32"  y="240" h="16" w="16"/>
+    <heiroglyphics x="48"  y="240" h="16" w="16"/>
+    <heiroglyphics x="64"  y="240" h="16" w="16"/>
+    <heiroglyphics x="80"  y="240" h="16" w="16"/>
+    <heiroglyphics x="96"  y="240" h="16" w="16"/>
+    <heiroglyphics x="108" y="240" h="16" w="16"/>
+    
+    <sun            x="128" y="128" h="128" w="128"/>
+    <sand           x="255" y="255" h="1"   w="1"  />
+    <pyramid_left   x="128" y="248" h="8"   w="8"  />
+    <pyramid_center x="136" y="248" h="8"   w="8"  />
+    <pyramid_right  x="144" y="248" h="8"   w="8"  />
+    <pyramid_top    x="136" y="240" h="8"   w="8"  />
+    
+    <shadow_left    x="128" y="232" h="16"  w="8"  />
+    <shadow_center  x="240" y="240" h="16"  w="8"  />
+    <shadow_right   x="248" y="240" h="16"  w="8"  />
     
 </atlas>
 

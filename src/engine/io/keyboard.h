@@ -21,6 +21,9 @@ public:
 
     void pressKey(SDL_Keycode);
     void unpressKey(SDL_Keycode);
+    
+    void deactivate();
+    
     bool isPressed();
     bool isActive();
 

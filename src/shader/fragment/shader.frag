@@ -12,6 +12,6 @@ void main() {
     color.r = color.r*fragColor.r;
     color.g = color.g*fragColor.g;
     color.b = color.b*fragColor.b;
-    if(color.a!=1) discard;
+    //if(color.a!=1) discard;
     outColor = color;
 }

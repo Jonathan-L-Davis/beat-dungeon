@@ -1,5 +1,6 @@
 #include "beat-dungeon.h"
 #include "init.h"
+#include "common.h"
 
 #include <glm/glm.hpp>
 #include <array>
@@ -1264,7 +1265,7 @@ std::array<glm::vec2,4> get_tex_coords(init_data_t::rect R, float w, float h){
     return retMe;
 }
 
-std::vector<graphics::vulkan::Vertex> draw_board(board b, float aspect_ratio){
+std::vector<graphics::vulkan::Vertex> draw_board(board b){
     
     const init_data_t::atlas_t& atlas = init_data.atlas;
     std::array<glm::vec2,4> texel;

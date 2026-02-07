@@ -18,12 +18,16 @@ std::chrono::time_point<std::chrono::system_clock> last_pulse;
 
 board b;
 
-key up,down,left,right;
+key up,down,left,right,escape,undo,reset;
 mouse_t mouse;
+
+gamestate_t gamestate = gamestate_t::load;
 
 bool pause_request = false;
 bool unpause_request = false;
 bool paused = false;
+
+bool any_key_pressed = false;
 
 float volume = 1;
 float volume_effects = 1;
@@ -31,13 +35,66 @@ float volume_music = 1;
 
 std::chrono::time_point<std::chrono::system_clock> pause_time;
 
-void update(double timeStep){
+
+double load_anim_time = 0.0;
+double max_load_anim_time = 5.0;
+void update_load_screen(double timeStep){
+    
+    if(any_key_pressed || false&&load_anim_time>max_load_anim_time ){
+        gamestate = gamestate_t::main_menu;
+        load_anim_time = 0.0;
+    }
+    
+    load_anim_time += timeStep;
+    
+}
+
+void update_main_menu(){
+    
+}
+
+void update_pause_menu(){
+    //if(escape.isActive()){
+    //    gamestate = gamestate_t::play;
+    //    unpause_request = true;
+    //    escape.deactivate();
+    //}
+}
+
+void update_level_selector(){
+    if(escape.isActive())
+        gamestate = gamestate_t::main_menu;
+}
+
+void update_board(double);
+void update_game();
+void update_level_editor(double timeStep){
+    if(escape.isActive())
+        gamestate = gamestate_t::main_menu;
+    
+    //update_board(timeStep);
+    update_game();
+    
+}
+
+void update_board(double timeStep){
+    
+    
+    if(escape.isActive()){
+        pause_request = true;
+    }
+    update_game();
+}
+
+void update_game(){
     std::chrono::time_point<std::chrono::system_clock> now = std::chrono::system_clock::now();
     
     if(pause_request){
         paused = true;// seems simple, but if we have to do other stuff, we need a space to react appropriately.
         pause_request = false;
         pause_time = now;
+        if(gamestate==gamestate_t::play)
+            gamestate = gamestate_t::pause_menu;
     }
     
     if(unpause_request){
@@ -118,4 +175,15 @@ void update(double timeStep){
         return;
     }
     
+}
+
+void update(double timeStep){
+    switch(gamestate){
+        case gamestate_t::load         : update_load_screen(timeStep); break;
+        case gamestate_t::main_menu    : update_main_menu();           break;
+        case gamestate_t::play         : update_board(timeStep);       break;
+        case gamestate_t::pause_menu   : update_pause_menu();          break;
+        case gamestate_t::level_select : update_level_selector();      break;
+        case gamestate_t::level_editor : update_level_editor(timeStep);      break;
+    }
 }

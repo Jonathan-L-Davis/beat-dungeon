@@ -236,7 +236,7 @@ void entity_manager(int X_block,int Y_block, bool &draw, bool &place_entities){
         demon_idx++;
         ImGui::InputInt("Demon Index",&demon_idx,1,1);
         demon_idx--;
-        if(demon_idx>=b.saxophones.size()) demon_idx = b.demons.size()-1;
+        if(demon_idx>=b.demons.size()) demon_idx = b.demons.size()-1;
         if(demon_idx<0) demon_idx = 0;
         
         int demon_n = demon_idx+1;
@@ -283,7 +283,7 @@ void entity_manager(int X_block,int Y_block, bool &draw, bool &place_entities){
         fireball_idx++;
         ImGui::InputInt("Fireball Index",&fireball_idx,1,1);
         notes_idx--;
-        if(fireball_idx>=b.notes.size()) fireball_idx = b.fireballs.size()-1;
+        if(fireball_idx>=b.fireballs.size()) fireball_idx = b.fireballs.size()-1;
         if(fireball_idx<0) fireball_idx = 0;
         
         int fireball_n = fireball_idx+1;

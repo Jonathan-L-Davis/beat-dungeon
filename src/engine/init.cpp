@@ -18,7 +18,7 @@ extern mouseRegistrar allMice;
 
 #include <iostream>
 
-extern key up,down,left,right;
+extern key up,down,left,right,escape;
 extern mouse_t mouse;
 
 init_data_t init_data;
@@ -393,6 +393,69 @@ bool load_atlas(std::string path){
         }else return false;
     }
     
+    if(atlas.FindChildElem("sun")){
+        init_data.atlas.sun.x = std::stoi(atlas.GetChildAttrib("x"));
+        init_data.atlas.sun.y = std::stoi(atlas.GetChildAttrib("y"));
+        init_data.atlas.sun.h = std::stoi(atlas.GetChildAttrib("h"));
+        init_data.atlas.sun.w = std::stoi(atlas.GetChildAttrib("w"));
+    }else return false;
+    
+    if(atlas.FindChildElem("sand")){
+        init_data.atlas.sand.x = std::stoi(atlas.GetChildAttrib("x"));
+        init_data.atlas.sand.y = std::stoi(atlas.GetChildAttrib("y"));
+        init_data.atlas.sand.h = std::stoi(atlas.GetChildAttrib("h"));
+        init_data.atlas.sand.w = std::stoi(atlas.GetChildAttrib("w"));
+    }else return false;
+    
+    if(atlas.FindChildElem("pyramid_left")){
+        init_data.atlas.pyramid_left.x = std::stoi(atlas.GetChildAttrib("x"));
+        init_data.atlas.pyramid_left.y = std::stoi(atlas.GetChildAttrib("y"));
+        init_data.atlas.pyramid_left.h = std::stoi(atlas.GetChildAttrib("h"));
+        init_data.atlas.pyramid_left.w = std::stoi(atlas.GetChildAttrib("w"));
+    }else return false;
+    
+    if(atlas.FindChildElem("pyramid_center")){
+        init_data.atlas.pyramid_center.x = std::stoi(atlas.GetChildAttrib("x"));
+        init_data.atlas.pyramid_center.y = std::stoi(atlas.GetChildAttrib("y"));
+        init_data.atlas.pyramid_center.h = std::stoi(atlas.GetChildAttrib("h"));
+        init_data.atlas.pyramid_center.w = std::stoi(atlas.GetChildAttrib("w"));
+    }else return false;
+    
+    if(atlas.FindChildElem("pyramid_right")){
+        init_data.atlas.pyramid_right.x = std::stoi(atlas.GetChildAttrib("x"));
+        init_data.atlas.pyramid_right.y = std::stoi(atlas.GetChildAttrib("y"));
+        init_data.atlas.pyramid_right.h = std::stoi(atlas.GetChildAttrib("h"));
+        init_data.atlas.pyramid_right.w = std::stoi(atlas.GetChildAttrib("w"));
+    }else return false;
+    
+    if(atlas.FindChildElem("pyramid_top")){
+        init_data.atlas.pyramid_top.x = std::stoi(atlas.GetChildAttrib("x"));
+        init_data.atlas.pyramid_top.y = std::stoi(atlas.GetChildAttrib("y"));
+        init_data.atlas.pyramid_top.h = std::stoi(atlas.GetChildAttrib("h"));
+        init_data.atlas.pyramid_top.w = std::stoi(atlas.GetChildAttrib("w"));
+    }else return false;
+    
+    if(atlas.FindChildElem("shadow_left")){
+        init_data.atlas.shadow_left.x = std::stoi(atlas.GetChildAttrib("x"));
+        init_data.atlas.shadow_left.y = std::stoi(atlas.GetChildAttrib("y"));
+        init_data.atlas.shadow_left.h = std::stoi(atlas.GetChildAttrib("h"));
+        init_data.atlas.shadow_left.w = std::stoi(atlas.GetChildAttrib("w"));
+    }else return false;
+    
+    if(atlas.FindChildElem("shadow_center")){
+        init_data.atlas.shadow_center.x = std::stoi(atlas.GetChildAttrib("x"));
+        init_data.atlas.shadow_center.y = std::stoi(atlas.GetChildAttrib("y"));
+        init_data.atlas.shadow_center.h = std::stoi(atlas.GetChildAttrib("h"));
+        init_data.atlas.shadow_center.w = std::stoi(atlas.GetChildAttrib("w"));
+    }else return false;
+    
+    if(atlas.FindChildElem("shadow_right")){
+        init_data.atlas.shadow_right.x = std::stoi(atlas.GetChildAttrib("x"));
+        init_data.atlas.shadow_right.y = std::stoi(atlas.GetChildAttrib("y"));
+        init_data.atlas.shadow_right.h = std::stoi(atlas.GetChildAttrib("h"));
+        init_data.atlas.shadow_right.w = std::stoi(atlas.GetChildAttrib("w"));
+    }else return false;
+    
     return true;
 }
 
@@ -455,11 +518,13 @@ void init(std::string title){
     left.setKeys({SDLK_A,SDLK_LEFT});
     down.setKeys({SDLK_S,SDLK_DOWN});
     right.setKeys({SDLK_D,SDLK_RIGHT});
-    //*// should really not work, but I want it to sooo bad. It's supposed to be an automatically tracked key thing, but it's busted due to initialization order fiasco.
+    escape.setKeys({SDLK_ESCAPE});
+    
     keyboard.registerKey(&up);
     keyboard.registerKey(&left);
     keyboard.registerKey(&down);
-    keyboard.registerKey(&right);//*/
+    keyboard.registerKey(&right);
+    keyboard.registerKey(&escape);
     
     allMice.registerMouse(&mouse);
     

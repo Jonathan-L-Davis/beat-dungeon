@@ -25,12 +25,15 @@ struct init_data_t{
         
         rect plate_tick[4];
         
+        // this is about as complicated as it looks. Basically don't touch unless you want to understand the whole encoding process & how the atlas is laid out & how walls are drawn.
         rect wall_1_tl_000,wall_1_tl_001,wall_1_tl_010,wall_1_tl_011,wall_1_tl_100,wall_1_tl_101,wall_1_tl_110,wall_1_tl_111;
         rect wall_1_tr_000,wall_1_tr_001,wall_1_tr_010,wall_1_tr_011,wall_1_tr_100,wall_1_tr_101,wall_1_tr_110,wall_1_tr_111;
         rect wall_1_br_000,wall_1_br_001,wall_1_br_010,wall_1_br_011,wall_1_br_100,wall_1_br_101,wall_1_br_110,wall_1_br_111;
         rect wall_1_bl_000,wall_1_bl_001,wall_1_bl_010,wall_1_bl_011,wall_1_bl_100,wall_1_bl_101,wall_1_bl_110,wall_1_bl_111;
         
         rect heiroglyphics[32];
+        
+        rect sun,sand,pyramid_left,pyramid_center,pyramid_right,pyramid_top,shadow_left,shadow_center,shadow_right;
     };
     
     atlas_t atlas;
