@@ -1256,10 +1256,10 @@ void board::update_wall_borders(){
 std::array<glm::vec2,4> get_tex_coords(init_data_t::rect R, float w, float h){
     std::array<glm::vec2,4> retMe;
     
-    retMe[0] = {float(R.x    )/w,float(R.y    )/h};
-    retMe[1] = {float(R.x+R.w)/w,float(R.y    )/h};
-    retMe[2] = {float(R.x+R.w)/w,float(R.y+R.h)/h};
-    retMe[3] = {float(R.x    )/w,float(R.y+R.h)/h};
+    retMe[0] = {float(R.x    +.001f)/w,float(R.y    +.001f)/h};
+    retMe[1] = {float(R.x+R.w-.001f)/w,float(R.y    +.001f)/h};
+    retMe[2] = {float(R.x+R.w-.001f)/w,float(R.y+R.h-.001f)/h};
+    retMe[3] = {float(R.x    +.001f)/w,float(R.y+R.h-.001f)/h};
     
     return retMe;
 }
